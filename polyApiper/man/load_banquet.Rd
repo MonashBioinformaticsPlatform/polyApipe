@@ -2,13 +2,20 @@
 % Please edit documentation in R/banquet.R
 \name{load_banquet}
 \alias{load_banquet}
-\title{Turn a directory into an environment of lazy-loading objects}
+\title{Load directories lazily, and load RDS and HDF5Array summarized experiments}
 \usage{
 load_banquet(path)
 }
 \arguments{
-\item{path}{A directory containing .rds files, HDF5Array summarized experiments, and banquets.}
+\item{path}{A directory containing .rds files, HDF5Array summarized
+experiments, and banquets.}
 }
 \description{
-Turn a directory into an environment of lazy-loading objects
+Loads a directory as an environment that will recursively call load_banquet
+on its contents. Also knows how to load .rds files and HDF5Array summarized
+experiments.
+}
+\details{
+If \code{path} is not a character vector, it is returned unchanged, so this
+function can be used to ensure an object is loaded.
 }

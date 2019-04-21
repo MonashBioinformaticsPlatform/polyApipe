@@ -1,0 +1,29 @@
+---
+output: html_document
+params:
+    path: "."
+---
+
+```{r}
+params$path
+banq <- load_banquet(params$path)
+
+banq$se
+
+components_seq_screeplot(banq$comp_seq, banq$rand_comp_seq)
+```
+
+```{r}
+numericInput("p", "Number of components?", 2)
+```
+
+```{r fig.width=4, fig.height=4}
+comp <- reactive(banq$comp_seq[[input$p]])
+
+renderPlot({
+    pairs(comp()$col, cex=0.1)
+})
+renderPlot({
+    pairs(comp()$row, cex=0.1)
+})
+```
