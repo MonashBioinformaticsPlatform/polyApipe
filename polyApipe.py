@@ -109,7 +109,7 @@ def main ():
             
     ## Get and merge polyA bams
     input_bams     = read_files_list_or_dir (args.input, filesuffix=".bam") 
-    input_from_dir = os.path.isdir(args.input[0]) # Already sanity checked, if dir, only one dir
+    input_from_dir = os.path.isdir(args.input[0]) or len(input_bams) > 1 # Already sanity checked, if dir, only one dir
     print("Finding input bam files: \n"+ "\n".join(input_bams) )
 
 
@@ -164,34 +164,34 @@ def main ():
  
  
     ## Annotate ORIGINAL bams with peaks
+    print("\nMaking filtered bam files annotated with peak hits (XT tag):")
     anno_bams = None
     if (not args.peak_anno_bams) :
         anno_bams = make_peak_hits_annotated_bams ( 
-                                        input_bams         = input_bams, 
-                                        input_from_dir     = input_from_dir,
-                                        polyA_peaks_gff    = polyA_peaks_gff, 
-                                        peak_anno_bam_root = peak_anno_bam_root, 
-                                        corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
-                                        umi_tag            = args.umi_tag, 
-                                        threads            = args.threads)
- 
+                                    input_bams         = input_bams, 
+                                    input_from_dir     = input_from_dir,
+                                    polyA_peaks_gff    = polyA_peaks_gff, 
+                                    peak_anno_bam_root = peak_anno_bam_root, 
+                                    corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
+                                    threads            = args.threads)
+
     else :
         anno_bams = input_bams
     
    
     if args.skip_count : sys.exit( "\nRequested no counting. Finished." )       
           
+    
     ## Now count with umi tools.
+    print("\nCounting reads per peak per cell:")
+    count_from_annotated_bams(      peak_anno_bams = anno_bams, 
+                                    input_from_dir = input_from_dir, 
+                                    counts_root    = counts_root, 
+                                    corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
+                                    umi_tag        = args.umi_tag ) 
  
- 
- 
- 
- 
-    ## Count in polyA peaks
-    print("\nCount reads in polyA peaks: ")
-    
-    
-    
+    print("\nDone!")
+
     
     
     
@@ -245,7 +245,7 @@ def process_bams_to_polyA_bam (input_bams, polyA_bam_root, minpolyA, minMAPQ, no
 
 
 def make_only_polyA_bam (bam_file, polyA_bamfile, minpolyA, minMAPQ, nonA_allowed) :
-    # SLIGHTLY DIFFERETENT TO only-polA.pl!!!
+    # SLIGHTLY DIFFERETENT TO only-polyA.pl!!!
     # option to allow n nonA chars in the soft maasked portion (assuming suffient minpolyA As.)
     # Rather than allowing nonA chars at the very end (ie stray adaptor) soft masked portion (assuming suffient minpolyA As.)
     # May / may not matter...
@@ -464,7 +464,7 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
 # FUNCTIONS - counting
 ###############################################################################
 
-def make_peak_hits_annotated_bams (input_bams, input_from_dir, polyA_peaks_gff, peak_anno_bam_root ,  corrected_cell_barcode_tag, umi_tag, threads) :
+def make_peak_hits_annotated_bams (input_bams, input_from_dir, polyA_peaks_gff, peak_anno_bam_root ,  corrected_cell_barcode_tag,  threads) :
     
     
      ## Figure out the output.
@@ -491,7 +491,7 @@ def make_peak_hits_annotated_bams (input_bams, input_from_dir, polyA_peaks_gff, 
         peak_anno_bam = peak_anno_bams[n] 
         
         print(input_bam +" to "+ peak_anno_bam)
-        make_peak_hit_annotated_bam (input_bam, polyA_peaks_gff , peak_anno_bam, threads)
+        make_peak_hit_annotated_bam (input_bam, polyA_peaks_gff , peak_anno_bam, corrected_cell_barcode_tag, threads)
     
     
     return(peak_anno_bams)
@@ -499,7 +499,7 @@ def make_peak_hits_annotated_bams (input_bams, input_from_dir, polyA_peaks_gff, 
 
 
 #uses UR?
-def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, threads):
+def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, corrected_cell_barcode_tag, threads):
     
     #NB: multiple runs on the same bams with different annos could clobber each other if simultaneous!
     # Due to how featurecounts names bams. (-o is only the counts table, not bams)
@@ -513,24 +513,14 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, threads):
         print("Couldn't create temporary dir for featureCounts run (already exists?)"+temp_feature_counts_dir)
 
 
-
+    # Run featureCounts
+    # Adds XT tag to bams:  XT:Z:Unknown:1_16442_r
     # -f count at local feature leve, not metafeature (gene)
-    #mkdir ${features_name}_${sample_name}_temp
-    #temp_feature_count_table=${features_name}_${sample_name}_temp/${sample_name}_${features_name}
-    #featureCounts ${in_bam} -t polyAends -g peak -F GTF -f -a ${features_file} -s 1 -o ${temp_feature_count_table} -R BAM -T $NUM_THREADS
     print(input_bam + " running featureCounts")
-
     temp_unfiltered            = os.path.join(temp_feature_counts_dir, os.path.basename(peak_anno_bam)) # is an outputfile 
     temp_unfiltered_bam        = temp_unfiltered + ".featureCounts.bam"
     temp_unfiltered_summary    = temp_unfiltered + ".summary"
-    
     featurecounts_summary_file = peak_anno_bam+"_featureCounts_summary.txt"
-    
-
-
-
-    
-    
     fc_cmd  = ["featureCounts", 
                input_bam, 
                "-t", "polyAends", "-g", "peak", "-F", "GTF", "-f", "-s", "1", "-R", "BAM",
@@ -539,43 +529,43 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, threads):
     ranok = subprocess.call( fc_cmd )
     if not ranok == 0 :
         sys.exit("Failed to run featureCounts correctly with cmd\n"+ " ".join(fc_cmd))
-    
-    
-    #mv ${features_name}_${sample_name}_temp/${bam_root}.bam.featureCounts.bam   ${anno_bam}
-    #mv $temp_feature_count_table $feat_counts_table
-    #mv ${temp_feature_count_table}.summary ${feat_counts_table}.summary
-    #rmdir ${features_name}_${sample_name}_temp/  # will fail if other things are processing, ok.
-        
-    print(input_bam + " filtering")
-    # Bams now have XT tag: 
-    # XT:Z:Unknown:1_16442_r
 
 
-    ## Filter out everythign without a CB tag (else umitools complains)
+    ## Filter out everythign without a CB tag (else umitools complains) - UR doesn't matter here.
     # Also, filter out annthing without an annotation, as this dramamtically reduces the size of the bam (which aren't being kept anyway.)
     # Then sort, because its much smaller now.
-    p1 = subprocess.Popen(["samtools","view","-h", temp_unfiltered_bam ],                                     stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "-E", "'(^@)|(XT:Z:)'"],                                      stdin=p1.stdout,  stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(["grep", "-E", "'(^@)|(CB:Z:)'"],                                      stdin=p2.stdout,  stdout=subprocess.PIPE)
-    p4 = subprocess.Popen(["samtools", "sort",  "-@", str(threads) ,"-o", peak_anno_bam, "-"],   stdin=p3.stdout,  stdout=subprocess.PIPE)
-    p4.communicate()
+    print(input_bam + " filtering")
+    #p1 = subprocess.Popen(["samtools","view","-h", temp_unfiltered_bam ],                                          stdout=subprocess.PIPE)
+    #p2 = subprocess.Popen(["grep", "-E", "'(^@)|(XT:Z:)'"],                                      stdin=p1.stdout,  stdout=subprocess.PIPE)
+    #p3 = subprocess.Popen(["grep", "-E", "'(^@)|("+corrected_cell_barcode_tag+":Z:)'"],          stdin=p2.stdout,  stdout=subprocess.PIPE)
+    #p4 = subprocess.Popen(["samtools", "sort",  "-@", str(threads) ,"-o", peak_anno_bam, "-"],   stdin=p3.stdout,  stdout=subprocess.PIPE)
+    #p4.communicate()
+    #
+    ## ^^^ These commands are not generating the outtupt
+    subprocess.check_output("samtools view -h "+temp_unfiltered_bam+" | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|("+corrected_cell_barcode_tag+":Z:)' | samtools sort  -@ "+str(threads)+" -o "+peak_anno_bam+" -", shell=True)
     
     
-    # check output
+    
+    print("samtools view -h "+temp_unfiltered_bam+" | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|("+corrected_cell_barcode_tag+":Z:)' | samtools sort  -@ "+str(threads)+" -o "+peak_anno_bam+" -")
+    
+    #samtools view -h mini.bam_mini3_polyA_peaks.gff_temp/mini.bam.featureCounts.bam | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|(CB:Z:)' | samtools sort  -@ 1 -o mini3_peakanno/mini.bam -
+    #sarah.williams@bioinformatics2:13_polyApipe$ samtools view mini3_peakanno/mini.bam | wc -l
+    #31
+    
+    
+    
+    # check output and cleanup
     if not os.path.exists(peak_anno_bam) or os.stat(peak_anno_bam).st_size == 0 :
         sys.exit("Failed to filter featureCounts output into annotated bam with cmd:\n" +
-                  "samtools view -h "+temp_unfiltered_bam+" | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|(CB:Z:)' | samtools sort  -@ "+str(threads)+" -o "+peak_anno_bam+" -"   )
+                  "samtools view -h "+temp_unfiltered_bam+" | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|("+corrected_cell_barcode_tag+":Z:)' | samtools sort  -@ "+str(threads)+" -o "+peak_anno_bam+" -"   )
     pysam.index(peak_anno_bam)
-    
-    
-    
-    
+    if not os.path.exists(peak_anno_bam+".bai")       : sys.exit("No bam index made for file "+peak_anno_bam+" Something went wrong.")       
             
     # Cleanup
     try : 
-        os.rename(temp_unfiltered_summary, featurecounts_summary_file)
-        os.remove(temp_unfiltered_bam)
-        os.remove(temp_unfiltered)
+        ##os.rename(temp_unfiltered_summary, featurecounts_summary_file)
+        ##os.remove(temp_unfiltered_bam)
+        ##os.remove(temp_unfiltered)
         os.rmdir(temp_feature_counts_dir)
     except OSError as e:
         warnings.warn("Unable to cleanup after featurecounts")
@@ -583,12 +573,44 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, threads):
 
 
 
-def count_from_annotated_bam () :
-    #echo source /home/swil0005/miniconda3/etc/profile.d/conda.sh
-    #echo conda activate umi_tools_0.5.4
-    #echo umi_tools count --per-gene --gene-tag=XT --extract-umi-method tag --umi-tag=UR --cell-tag=CB  --per-cell -I ${anno_cb_bam}  -S ${counts_table}
-    #echo conda deactivate
-    pass
+def count_from_annotated_bams(peak_anno_bams, input_from_dir, counts_root, corrected_cell_barcode_tag, umi_tag) :
+
+
+    ## Figure out the output.
+    counts_files = list()
+    if not input_from_dir :
+        counts_files.append(counts_root+".tab.gz")
+    else :  
+        try:  
+            os.mkdir(counts_root)
+        except OSError:  
+            #sys.exit("Couldn't create counts directory (already exists?)"+counts_root)
+            print("Counts dir exists already (TEMP)")        
+        for peak_anno_bam in peak_anno_bams : 
+            counts_files.append(os.path.join(counts_root, os.path.basename(peak_anno_bam)))
+
+
+    # Process each.
+    for n in range(0,len(peak_anno_bams)) : 
+        peak_anno_bam = peak_anno_bams[n] 
+        counts_file   = counts_files[n]
+        #count_from_annotated_bam(peak_anno_bam, counts_file, corrected_cell_barcode_tag, umi_tag)
+    
+        print(peak_anno_bam+" counting")
+        
+        ut_cmd = ["umi_tools", "count",
+                "--per-gene", "--gene-tag=XT", "--per-cell", "--extract-umi-method", "tag",
+                "--umi-tag="+umi_tag , "--cell-tag="+corrected_cell_barcode_tag,
+                "-I", peak_anno_bam,  "-S", counts_file]
+        ranok = subprocess.call( ut_cmd )
+        if not ranok == 0 :
+            sys.exit("Failed to run featureCounts correctly with cmd\n"+ " ".join(ut_cmd))
+
+    return(counts_files)
+
+
+
+
 
 
 ###############################################################################
