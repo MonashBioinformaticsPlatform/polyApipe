@@ -12,14 +12,16 @@ Encoding: UTF-8
 LazyData: true
 Imports: 
     methods,
-    future,
     magrittr,
     dplyr,
     purrr,
+    jsonlite,
     HDF5Array,
     BiocGenerics,
     DelayedArray,
     AnnotationHub,
+    AnnotationDbi,
+    GO.db,
     GenomicRanges,
     GenomicFeatures,
     ensembldb,
@@ -28,5 +30,6 @@ Imports:
     scran,
     scater,
     weitrix,
-    topconfects
+    topconfects,
+    limma
 RoxygenNote: 6.1.1
