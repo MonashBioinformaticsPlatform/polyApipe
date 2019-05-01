@@ -8,9 +8,10 @@ import warnings
 from collections import defaultdict
 from distutils.version import StrictVersion
 
-# ./polyApipe.py -i test_files/bams/mini.bam -o mini   #NB Small, and has no fwd polyA
+# module load subread
+# ./polyApipe.py -i test_files/bams/mini.bam -o xmini   #NB Small, and has no fwd polyA
 # ./polyApipe.py -i test_files/bams_polyA/mini_polyA.bam -o xxxx   # alreayd polyA, but lots of r/f to see.
-
+# ./polyApipe.py -i test_files/bams/somedir  -o xdir
 
 parser = argparse.ArgumentParser(description="Count reads in polyA peaks. "+
      "Given a set of annotated bams files (cell barcode, UMI code and gene) "+
@@ -517,16 +518,17 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, corrected
     # Adds XT tag to bams:  XT:Z:Unknown:1_16442_r
     # -f count at local feature leve, not metafeature (gene)
     print(input_bam + " running featureCounts")
-    temp_unfiltered            = os.path.join(temp_feature_counts_dir, os.path.basename(peak_anno_bam)) # is an outputfile 
-    temp_unfiltered_bam        = temp_unfiltered + ".featureCounts.bam"
+    temp_unfiltered            = os.path.join(temp_feature_counts_dir, os.path.splitext(os.path.basename(peak_anno_bam))[0]) # is an outputfile 
+    temp_unfiltered_bam        = os.path.join(temp_feature_counts_dir, os.path.basename(input_bam )+ ".featureCounts.bam") # bam named via input file, not -o
     temp_unfiltered_summary    = temp_unfiltered + ".summary"
-    featurecounts_summary_file = peak_anno_bam+"_featureCounts_summary.txt"
+    #saved_unfiltered_summary   = os.path.basename(temp_unfiltered) + "_count_totals.txt" #+"."+os.path.basename(peak_anno_bam)
+    
     fc_cmd  = ["featureCounts", 
                input_bam, 
                "-t", "polyAends", "-g", "peak", "-F", "GTF", "-f", "-s", "1", "-R", "BAM",
                "-a", peaks_gff,
                "-o", temp_unfiltered  ]
-    ranok = subprocess.call( fc_cmd )
+    ranok = subprocess.call( fc_cmd ) 
     if not ranok == 0 :
         sys.exit("Failed to run featureCounts correctly with cmd\n"+ " ".join(fc_cmd))
 
@@ -541,19 +543,10 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, corrected
     #p4 = subprocess.Popen(["samtools", "sort",  "-@", str(threads) ,"-o", peak_anno_bam, "-"],   stdin=p3.stdout,  stdout=subprocess.PIPE)
     #p4.communicate()
     #
-    ## ^^^ These commands are not generating the outtupt
+    ## ^^^ These commands are not generating the output
     subprocess.check_output("samtools view -h "+temp_unfiltered_bam+" | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|("+corrected_cell_barcode_tag+":Z:)' | samtools sort  -@ "+str(threads)+" -o "+peak_anno_bam+" -", shell=True)
-    
-    
-    
-    print("samtools view -h "+temp_unfiltered_bam+" | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|("+corrected_cell_barcode_tag+":Z:)' | samtools sort  -@ "+str(threads)+" -o "+peak_anno_bam+" -")
-    
-    #samtools view -h mini.bam_mini3_polyA_peaks.gff_temp/mini.bam.featureCounts.bam | grep -E '(^@)|(XT:Z:)' | grep -E '(^@)|(CB:Z:)' | samtools sort  -@ 1 -o mini3_peakanno/mini.bam -
-    #sarah.williams@bioinformatics2:13_polyApipe$ samtools view mini3_peakanno/mini.bam | wc -l
-    #31
-    
-    
-    
+
+        
     # check output and cleanup
     if not os.path.exists(peak_anno_bam) or os.stat(peak_anno_bam).st_size == 0 :
         sys.exit("Failed to filter featureCounts output into annotated bam with cmd:\n" +
@@ -563,12 +556,12 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, corrected
             
     # Cleanup
     try : 
-        ##os.rename(temp_unfiltered_summary, featurecounts_summary_file)
-        ##os.remove(temp_unfiltered_bam)
-        ##os.remove(temp_unfiltered)
+        os.remove(temp_unfiltered_summary )
+        os.remove(temp_unfiltered_bam)
+        os.remove(temp_unfiltered)
         os.rmdir(temp_feature_counts_dir)
     except OSError as e:
-        warnings.warn("Unable to cleanup after featurecounts")
+        warnings.warn("Unable to cleanup after featurecounts. Continuing.")
 
 
 
@@ -587,7 +580,8 @@ def count_from_annotated_bams(peak_anno_bams, input_from_dir, counts_root, corre
             #sys.exit("Couldn't create counts directory (already exists?)"+counts_root)
             print("Counts dir exists already (TEMP)")        
         for peak_anno_bam in peak_anno_bams : 
-            counts_files.append(os.path.join(counts_root, os.path.basename(peak_anno_bam)))
+            sample_base = os.path.splitext(os.path.basename(peak_anno_bam))[0]
+            counts_files.append(os.path.join(counts_root, sample_base+".tab.gz"))
 
 
     # Process each.
