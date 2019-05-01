@@ -11,6 +11,25 @@ License: LGPL-2.1 | file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    future,
-    HDF5Array
+    methods,
+    magrittr,
+    dplyr,
+    purrr,
+    jsonlite,
+    HDF5Array,
+    BiocGenerics,
+    DelayedArray,
+    AnnotationHub,
+    AnnotationDbi,
+    GO.db,
+    GenomicRanges,
+    GenomicFeatures,
+    ensembldb,
+    SummarizedExperiment,
+    SingleCellExperiment,
+    scran,
+    scater,
+    weitrix,
+    topconfects,
+    limma
 RoxygenNote: 6.1.1
