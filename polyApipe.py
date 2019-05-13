@@ -701,7 +701,7 @@ def quick_bam_check (bam_file, cell_tag, umi_tag, minMAPQ) :
     # is there an index?
     bam_index = bam_file+".bai"
     
-    if not os.path.exists(bam_index)       : sys.exit("No bam index "+bam_index+" for file "+bam+" Use samtools index input bams.")       
+    if not os.path.exists(bam_index)       : sys.exit("No bam index "+bam_index+" for file "+bam_file+" Use samtools index input bams.")       
 
     # Read chr names  (actually, only from bam, so no need.)
     # Look for one of each of those tags in top n reads. Counting won't happen without them!
