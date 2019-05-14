@@ -1,11 +1,11 @@
 ##gff
-1	polyAends	polyAends	3630788	3631037	.	-	.	peakgene="Unknown"; peak="Unknown:1_3630788_r"; peakdepth="256"; misprime="False";	
-1	polyAends	polyAends	4489402	4489651	.	+	.	peakgene="Unknown"; peak="Unknown:1_4489651_f"; peakdepth="37"; misprime="True";	
-1	polyAends	polyAends	4687854	4688103	.	-	.	peakgene="Unknown"; peak="Unknown:1_4687854_r"; peakdepth="459"; misprime="True";	
-1	polyAends	polyAends	4772323	4772572	.	+	.	peakgene="Unknown"; peak="Unknown:1_4772572_f"; peakdepth="40"; misprime="True";	
-1	polyAends	polyAends	4776383	4776632	.	-	.	peakgene="Mrpl15"; peak="Mrpl15:1_4776383_r"; peakdepth="73"; misprime="False";	
-1	polyAends	polyAends	4781389	4781638	.	-	.	peakgene="Mrpl15"; peak="Mrpl15:1_4781389_r"; peakdepth="10"; misprime="False";	
-1	polyAends	polyAends	4846486	4846735	.	+	.	peakgene="Lypla1"; peak="Lypla1:1_4846735_f"; peakdepth="45"; misprime="False";	
-1	polyAends	polyAends	4897512	4897761	.	+	.	peakgene="Tcea1"; peak="Tcea1:1_4897761_f"; peakdepth="14"; misprime="False";	
-1	polyAends	polyAends	4909573	4909822	.	-	.	peakgene="Unknown"; peak="Unknown:1_4909573_r"; peakdepth="40"; misprime="False";	
-1	polyAends	polyAends	5162199	5162448	.	+	.	peakgene="Atp6v1h"; peak="Atp6v1h:1_5162448_f"; peakdepth="156"; misprime="False";	
+1	polyAends	polyAends	3630788	3631037	.	-	.	peakgene="Unknown"; peak="Unknown:1_3630788_r"; peakdepth="256"; misprime="False";
+1	polyAends	polyAends	4489402	4489651	.	+	.	peakgene="Unknown"; peak="Unknown:1_4489651_f"; peakdepth="37"; misprime="True";
+1	polyAends	polyAends	4687854	4688103	.	-	.	peakgene="Unknown"; peak="Unknown:1_4687854_r"; peakdepth="459"; misprime="True";
+1	polyAends	polyAends	4772323	4772572	.	+	.	peakgene="Unknown"; peak="Unknown:1_4772572_f"; peakdepth="40"; misprime="True";
+1	polyAends	polyAends	4776383	4776632	.	-	.	peakgene="Mrpl15"; peak="Mrpl15:1_4776383_r"; peakdepth="73"; misprime="False";
+1	polyAends	polyAends	4781389	4781638	.	-	.	peakgene="Mrpl15"; peak="Mrpl15:1_4781389_r"; peakdepth="10"; misprime="False";
+1	polyAends	polyAends	4846486	4846735	.	+	.	peakgene="Lypla1"; peak="Lypla1:1_4846735_f"; peakdepth="45"; misprime="False";
+1	polyAends	polyAends	4897512	4897761	.	+	.	peakgene="Tcea1"; peak="Tcea1:1_4897761_f"; peakdepth="14"; misprime="False";
+1	polyAends	polyAends	4909573	4909822	.	-	.	peakgene="Unknown"; peak="Unknown:1_4909573_r"; peakdepth="40"; misprime="False";
+1	polyAends	polyAends	5162199	5162448	.	+	.	peakgene="Atp6v1h"; peak="Atp6v1h:1_5162448_f"; peakdepth="156"; misprime="False";

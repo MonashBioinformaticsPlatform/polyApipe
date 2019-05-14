@@ -424,7 +424,7 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
     # Print regions
     print("Writing output "+polyA_peaks_gff, file=sys.stderr)
     gff = open(polyA_peaks_gff, "w")
-    gff.write("##gff\n") ##gff-version 3
+    gff.write("##gff\n") ## atm its a gtf / gff2 like ensembl
 
     for contig in sorted(regions.keys()):
       for pos in sorted(regions[contig].keys()):
@@ -449,7 +449,7 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
         # There is not bed, only gff
         #12	polyAends	polyApeak	121802524	121802774	.	-	.	peakgene="RHOF"; peak="RHOF:121779162"; peakdepth="20"; misprime="False";    
         detail='peakgene="%s"; peak="%s"; peakdepth="%d"; misprime="%s";'%(gene_name, peak_name, depth, str(misprime) )
-        gff.write("\t".join(str(x) for x in [contig,"polyAends","polyAends",pos,end,".",strand,".", detail,"\n"  ]))
+        gff.write("\t".join(str(x) for x in [contig,"polyAends","polyAends",pos,end,".",strand,".", detail ])+"\n")
         
     
     gff.close()
