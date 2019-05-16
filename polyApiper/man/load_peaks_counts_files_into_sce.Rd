@@ -2,11 +2,49 @@
 % Please edit documentation in R/data_loading.R
 \name{load_peaks_counts_files_into_sce}
 \alias{load_peaks_counts_files_into_sce}
-\title{lalalla}
+\title{Load multiple peak counts files into a SingleCellExperiment object}
 \usage{
 load_peaks_counts_files_into_sce(counts_file_list, batch_names,
-  peak_info_file, sce_save_path, replace = FALSE, ...)
+  peak_info_file, output, replace = FALSE, ...)
+}
+\arguments{
+\item{counts_file_list}{A vector of tab-delimeted files of read counts per peak. 
+The '<sample>.tab.gz' as output from polyApipe.py. 
+Format: <peak> <cell> <count>}
+
+\item{batch_names}{A vector of the batch/sample names, in same order as counts_file_list}
+
+\item{peak_info_file}{GTF formatted peak file _specfically_ as output from polyApipe.py}
+
+\item{output}{Where to save the sce object on disk using saveHDF5SummarizedExperiment.
+Should not exist. This directory will be created.}
+
+\item{replace}{Overwrite existing output file? (Default=FALSE)}
+
+\item{...}{Other parameters passed through to *load_peaks_counts_into_sce* 
+e.g. n_max, min_reads_per_barcode (but not cell_prefix or missing_peaks_are_zero)}
 }
 \description{
-lalalla
+Load multiple named 3-column counts.tab.gz files from polyApipe.py into a 
+SingleCellExperiment for analysis. Each cell will be uniquely named, 
+and colData will include the batch.
 }
+\examples{
+
+counts_file1   <- system.file("extdata", "demo_dataset/demo_counts/SRR5259354_demo.tab.gz", package = "polyApiper")
+counts_file2   <- system.file("extdata", "demo_dataset/demo_counts/SRR5259422_demo.tab.gz", package = "polyApiper")
+peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", package = "polyApiper") 
+
+sce <- load_peaks_counts_files_into_sce(c(counts_file1,counts_file2),
+               batch_names    = c("demo1","demo2"),
+               peak_info_file = peak_info_file,
+               output = "demo1and2",
+               min_reads_per_barcode=1  # Required for tiny demo data.
+               )
+
+}
+\seealso{
+Other peak counts loading functions: \code{\link{load_peaks_counts_dir_into_sce}},
+  \code{\link{load_peaks_counts_into_sce}}
+}
+\concept{peak counts loading functions}
