@@ -75,12 +75,25 @@ load_peaks_counts_into_sce <- function(counts_file,
    }
    
    # Get list of peaks from the peaks .gtf info file. 
-   # Because no all files/cells will have all peaks, need to have a consistant list
-   # anything not seen is assumed 0.
+   # Because no all files/cells will have all peaks with multipl samples.
+   # need to have a consistant list anything not seen is assumed 0.
    # Obviously needs to be same file for files to merge, so order is the same.
-   peak_info <- S4Vectors::DataFrame(read_polyA_peak_file_gtf(peak_info_file) %>%
-                                        dplyr::select(peak, chr, start, end, strand, peakdepth, peakgene, misprime)) 
+   peak_info <- S4Vectors::DataFrame(
+      read_polyA_peak_file_gtf(peak_info_file) %>%
+      dplyr::select(peak, chr, start, end, strand, peakdepth, misprime)
+      ) 
    rownames(peak_info) <- peak_info$peak
+   peak_info$peakdepth <- as.numeric(peak_info$peakdepth)
+   peak_info$misprime  <- as.logical((peak_info$misprime))
+   
+   #Then, store in granges object
+   gr <- GRanges(
+      seqnames = Rle(factor(peak_info$chr)),
+      ranges   = IRanges(start=peak_info$start, end= peak_info$end),
+      strand   = Rle(factor(peak_info$strand))
+   )
+   mcols(gr) <- peak_info[, ! colnames(peak_info) %in% c("chr", "start", "end", "strand")]
+   names(gr) <- gr$peak
    
    
    # Not useing read_tsv because of compression.(segfault.) 
@@ -132,9 +145,9 @@ load_peaks_counts_into_sce <- function(counts_file,
    
    # Load up the sce.
    sce <- SingleCellExperiment(
-      assays = list(counts = counts_matrix ),
-      colData = new_colData,
-      rowData = DataFrame(peak_info[rownames(counts_matrix),]) )   
+      assays    = list(counts = counts_matrix ),
+      colData   = new_colData,
+      rowRanges = gr[rownames(counts_matrix),] )
    rm(counts_matrix)
    
    # Subset cells with enough reads (since most are rubbish barcodes.)
