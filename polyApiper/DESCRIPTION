@@ -31,5 +31,11 @@ Imports:
     scater,
     weitrix,
     topconfects,
-    limma
+    limma,
+    Matrix,
+    DelayedMatrixStats,
+    readr,
+    stringr,
+    tibble,
+    tidyr
 RoxygenNote: 6.1.1

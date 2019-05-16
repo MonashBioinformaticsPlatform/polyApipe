@@ -19,9 +19,7 @@ rows - one per gene, and each peakgene column will contain only one gene.
 }
 \description{
 The polyApipe.py script will write a gtf formatted file with the polyA peak 
-locations. This function will read it into a tabular format in R.
-}
-\details{
+locations. This function will read it into a tabular format in R. 
 This is not a general gff/gtf reader funtion -  
 it will break on probably any other gff!
 }
