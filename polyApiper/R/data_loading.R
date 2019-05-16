@@ -325,13 +325,6 @@ load_peaks_counts_dir_into_sce <- function(
 #' it will break on probably any other gff!
 #' 
 #' @param peak_info_file GTF formatted peak file _specfically_ as output from polyApipe.py
-#' @param sep_genes The gtf from polyApipe.py can have polyA peaks assigned 
-#' from multiple genes (gene assigment derived from original bam intput files).
-#' When FALSE (the default) - each peak will be present once in the table, 
-#' and the 'peakgene' can have multiple comma separated values. 
-#' If set to TRUE, a single peak around multiple genes will have duplicate 
-#' rows - one per gene, and each peakgene column will contain only one gene.
-#' (Default=FALSE)
 #' 
 #' @examples 
 #' 
@@ -345,7 +338,7 @@ load_peaks_counts_dir_into_sce <- function(
 #' @importFrom tidyr separate_rows separate spread
 #' 
 #' @export
-read_polyA_peak_file_gtf <- function(gtf_file, sep_genes=FALSE) {
+read_polyA_peak_file_gtf <- function(gtf_file) {
    # Very specifically this format of gtf.
    #Y	polyAends	polyApeak	20592383	20592633	.	+	.	peakgene="EIF1AY"; peak="EIF1AY:20592632"; peakdepth="64"; misprime="False";
    #Y	polyAends	polyApeak	20843093	20843343	.	-	.	peakgene="Unknown"; peak="Unknown-Y-20843092"; peakdepth="14"; misprime="True";
@@ -372,12 +365,6 @@ read_polyA_peak_file_gtf <- function(gtf_file, sep_genes=FALSE) {
    stopifnot(nrow(polyA_peak_feature_table)==nrow(raw_gtf_table), 
              nrow(polyA_peak_feature_table)==nrow(att_table))
    
-   
-   # Repeat peaks when assigned to multiple genes?
-   # (default no - so peakgene can be ; separated list of multiple genes.)
-   if (sep_genes) {
-      polyA_peak_feature_table <- separate_rows(polyA_peak_feature_table, peakgene, sep=",")
-   }
    
    return(polyA_peak_feature_table[,-1])
 }
