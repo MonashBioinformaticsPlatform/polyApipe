@@ -9,9 +9,12 @@ from collections import defaultdict
 from distutils.version import StrictVersion
 
 # module load subread
-# ./polyApipe.py -i test_files/bams/mini.bam -o xmini   #NB Small, and has no fwd polyA
+
+# ./polyApipe.py -i data/demo/  -o xx2
+# ./polyApipe.py -i data/demo/data/demo/SRR5259422_demo.bam  -o xxSRR5259422_demo
 # ./polyApipe.py -i test_files/bams_polyA/mini_polyA.bam -o xxxx   # alreayd polyA, but lots of r/f to see.
-# ./polyApipe.py -i test_files/bams/somedir  -o xdir
+
+
 
 parser = argparse.ArgumentParser(description="Count reads in polyA peaks. "+
      "Given a set of annotated bams files (cell barcode, UMI code and gene) "+
@@ -47,8 +50,6 @@ config_args.add_argument('--misprime_in',      dest='misprime_in',      type=int
 config_args  = parser.add_argument_group('Bam tags', 'For specifiing umi, cell, genes e.t.c')                                                      
 config_args.add_argument('--cell_barcode_tag', dest='corrected_cell_barcode_tag', type=str, default='CB',
                      help="Corrected (exact-match) cell barcode bam tag used in bam input.")
-#config_args.add_argument('--umi_tag', dest='corrected_umi_tag', type=str, default='UB',
-#                     help="Corrected (exact-match) UMI / molecular barcode bam tag used in bam input.")
 config_args.add_argument('--umi_tag', dest='umi_tag', type=str, default='UR',
                      help="Uncorrected UMI / molecular barcode bam tag used in bam input. May contain mismatches.")               
 
@@ -72,14 +73,18 @@ running_args.add_argument('--peak_anno_bams', dest='peak_anno_bams', action='sto
                     help="The bams provided have already been labelled with peaks regions e.t.c Jump to immediate counting. NOT USED")
                     
 running_args.add_argument('-p', '--peaks_gff', dest='peaks_gff', type=str, default=None,
-                    help="If provided, use this gff file of peaks instead of making one from polyA reads. Will still try to make those polyA bams unless --polyA_bams also specified. [DESCRIBE FORMAT]. ")
+                    help="If provided, use this gff file of peaks instead of making one from polyA reads. "+
+                         "Will still try to make those polyA bams unless --polyA_bams also specified. "+
+                         "This is a gtf format specifically as output by this script. See example data.")
 running_args.add_argument('-t', '--threads', dest='threads', type=int, default=1,
-                    help="Num threads for multithreaded steps. UNUSED")
+                    help="Num threads for multithreaded steps.")
+running_args.add_argument('--skipchecks', dest='skip_checks', action='store_true', default=False,
+                    help=argparse.SUPPRESS) # nothing to see here, move along.
+
+
+
 
 args = parser.parse_args()
-
-#print("Opitons: "+args+"\n")
-
 
 ###############################################################################
 # MAIN
@@ -96,7 +101,8 @@ def main ():
     # parameters
     check_params_ok(args)
     # Check tools in paths.
-    check_tools_available()
+    if not args.skip_checks : check_tools_available()
+
     # Check output clear
     
     polyA_bam_root     = args.out_root+"_polyA"
@@ -625,14 +631,13 @@ def check_params_ok (args) :
         sys.exit("Can't specify both --polyA_bams and --peak_anno_bams. If you do have both processed already. " + 
         "Try making the peaks gff file first (if not done alredy)( --polyA_bams with --no_count). "+
         "Then run again with specifying --peaks_gff and --peak_anno_bams")    
-    
+
+    if args.out_root == "." or args.out_root.endswith("/") :
+        sys.exit("--output should be a string, not a directory")
+
 
 
         
-def check_outputs_clean () :
-    
-    # out root not / . remove trainiling /
-    pass
 
 
 
@@ -688,8 +693,8 @@ def check_tools_available () :
         version = version.replace('v','') 
         
         if StrictVersion(version) < StrictVersion('1.5.3') :
-                sys.exit("Found featureCouints, but an old version. Need version 1.5.3 or later for this to work.")        
-    except Error as e:
+                sys.exit("Found featureCounts, but an old version. Need version 1.5.3 or later for this to work.")
+    except :
         sys.exit("Coudln't parse the output of 'featureCounts -v'. The subread package (v1.5.3 or later) should be installed and in PATH.")
 
 
