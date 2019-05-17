@@ -4,17 +4,9 @@
 \alias{read_polyA_peak_file_gtf}
 \title{Read in the polyA peaks gtf file}
 \usage{
-read_polyA_peak_file_gtf(gtf_file, sep_genes = FALSE)
+read_polyA_peak_file_gtf(gtf_file)
 }
 \arguments{
-\item{sep_genes}{The gtf from polyApipe.py can have polyA peaks assigned 
-from multiple genes (gene assigment derived from original bam intput files).
-When FALSE (the default) - each peak will be present once in the table, 
-and the 'peakgene' can have multiple comma separated values. 
-If set to TRUE, a single peak around multiple genes will have duplicate 
-rows - one per gene, and each peakgene column will contain only one gene.
-(Default=FALSE)}
-
 \item{peak_info_file}{GTF formatted peak file _specfically_ as output from polyApipe.py}
 }
 \description{

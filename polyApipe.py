@@ -10,16 +10,16 @@ from distutils.version import StrictVersion
 
 # module load subread
 
-# ./polyApipe.py -i data/demo/  -o xx2
+# ./polyApipe.py -i test_files/demo/  -o xxxx
 # ./polyApipe.py -i data/demo/data/demo/SRR5259422_demo.bam  -o xxSRR5259422_demo
 # ./polyApipe.py -i test_files/bams_polyA/mini_polyA.bam -o xxxx   # alreayd polyA, but lots of r/f to see.
 
-
-
-parser = argparse.ArgumentParser(description="Count reads in polyA peaks. "+
-     "Given a set of annotated bams files (cell barcode, UMI code and gene) "+
-     "(1) Find where peaks of polyA reads occur. "+
-     "(2) Count how many reads per sample fall in each polyA peak.")
+parser = argparse.ArgumentParser(
+    description="Count reads in polyA peaks. "+
+        "Given a set of bams files (with cell barcode and UMI code tags) "+
+        "(1) Find where peaks of polyA reads occur. "+
+        "(2) Count how many reads per sample fall in each polyA peak.",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter )#
 
 main_args  = parser.add_argument_group('Main')
 main_args.add_argument('-i','--input', dest='input', type=str, nargs='+',required=True,
@@ -27,14 +27,14 @@ main_args.add_argument('-i','--input', dest='input', type=str, nargs='+',require
 main_args.add_argument('-o','--output',dest='out_root', type=str,required=True,
                      help="Name root to use for output files.")
 
-config_args  = parser.add_argument_group('PolyA peak thresholds', 'Peak-level configs')  
+config_args  = parser.add_argument_group('PolyA peak options', 'Set peak-level configs')
 config_args.add_argument('--depth_threshold', dest='depth_threshold', type=int, default=10,
                     help="Need at least this many reads in a peak to call an APA site.")
 config_args.add_argument('--region_size', dest='region_size', type=int, default=250,
                     help="Size upstream of APA site to consider polyA reads.")
 
 
-config_args  = parser.add_argument_group('PolyA read thresholds', 'Read-level polyA filters e.t.c')
+config_args  = parser.add_argument_group('PolyA read options', 'Set read-level configs for defining polyA reads')
 config_args.add_argument('--minMAPQ',          dest='minMAPQ',          type=int, default=10,
                     help="Minimum MAPQ mapping quality to consider.")      
 config_args.add_argument('--minpolyA',         dest='minpolyA',         type=int, default=5,
@@ -47,37 +47,30 @@ config_args.add_argument('--misprime_in',      dest='misprime_in',      type=int
                     help="Look for --misprime_A_count As in this many nucleotides at the end of a reaad alignment when labelling potential misprime")                     
 
                     
-config_args  = parser.add_argument_group('Bam tags', 'For specifiing umi, cell, genes e.t.c')                                                      
+config_args  = parser.add_argument_group('Bam tags', 'For specifiing umi, cell e.t.c')
 config_args.add_argument('--cell_barcode_tag', dest='corrected_cell_barcode_tag', type=str, default='CB',
                      help="Corrected (exact-match) cell barcode bam tag used in bam input.")
 config_args.add_argument('--umi_tag', dest='umi_tag', type=str, default='UR',
                      help="Uncorrected UMI / molecular barcode bam tag used in bam input. May contain mismatches.")               
 
-config_args.add_argument('--gene_tag', dest='gene_tag', type=str, default='GN',
-                     help="Assigned gene barcode bam tag used in bam input.")
-
-                     
-
 
 running_args  = parser.add_argument_group('Running', 'For changing how this script runs. Stop/start on polyA step e.t.c')
+running_args.add_argument('-t', '--threads', dest='threads', type=int, default=1,
+                    help="Num threads for multithreaded steps.")
 running_args.add_argument('--no_peaks', dest='skip_peaks', action='store_true', default=False,
                     help="Stop after making polyA bams. Do not try to find peaks in polyA files (implies --no_anno --no_count)" )          
 running_args.add_argument('--no_anno', dest='skip_anno', action='store_true', default=False,
                     help="Stop after making merged polyA peaks gff file. Do not try to annotate peaks in bams files or count (implies --no_count)" )                                      
 running_args.add_argument('--no_count', dest='skip_count', action='store_true', default=False,
-                    help="Do not count reads in peaks (but still annotate them in bams.)" )          
-                              
+                    help="Do not count reads in peaks (but still annotate them in bams.)" )
 running_args.add_argument('--polyA_bams', dest='polyA_bams', action='store_true', default=False,
                     help="Skip polyA filtering step, the bams specified with '-i' are already filtered to polyA-containing reads only.")            
 running_args.add_argument('--peak_anno_bams', dest='peak_anno_bams', action='store_true', default=False,
-                    help="The bams provided have already been labelled with peaks regions e.t.c Jump to immediate counting. NOT USED")
-                    
+                    help="The bams provided have already been labelled with peaks regions e.t.c Jump to immediate counting.")
 running_args.add_argument('-p', '--peaks_gff', dest='peaks_gff', type=str, default=None,
                     help="If provided, use this gff file of peaks instead of making one from polyA reads. "+
                          "Will still try to make those polyA bams unless --polyA_bams also specified. "+
                          "This is a gtf format specifically as output by this script. See example data.")
-running_args.add_argument('-t', '--threads', dest='threads', type=int, default=1,
-                    help="Num threads for multithreaded steps.")
 running_args.add_argument('--skipchecks', dest='skip_checks', action='store_true', default=False,
                     help=argparse.SUPPRESS) # nothing to see here, move along.
 
@@ -156,8 +149,7 @@ def main ():
                                     depth_threshold   = args.depth_threshold, 
                                     region_size       = args.region_size,
                                     corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
-                                    umi_tag           = args.umi_tag, 
-                                    gene_tag          = args.gene_tag,
+                                    umi_tag           = args.umi_tag,
                                     misprime_A_count  = args.misprime_A_count,
                                     misprime_in       = args.misprime_in)
     else :
@@ -307,25 +299,21 @@ def make_only_polyA_bam (bam_file, polyA_bamfile, minpolyA, minMAPQ, nonA_allowe
 ###############################################################################
 
 def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, region_size,
-    corrected_cell_barcode_tag, umi_tag, gene_tag,
-    misprime_A_count, misprime_in) : 
+    corrected_cell_barcode_tag, umi_tag, misprime_A_count, misprime_in) :
 
     # Some rough numbers to flag where things go wrong.
     reads_total       = 0 
     reads_considered  = 0
-    reads_having_gene = 0
-    
-    
-    samfile = pysam.AlignmentFile(polyA_bam,'rb')
-    #ends[contig][pos][strand]
-    ends = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+    ends          = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     misprime_site = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-    genes = defaultdict(set)
 
     print("Processing read ends", file=sys.stderr)
+    samfile = pysam.AlignmentFile(polyA_bam,'rb')
+
     for read in samfile.fetch(until_eof=True):
         reads_total +=1
-        #print(read)
+
         try:
           cb = read.get_tag(corrected_cell_barcode_tag)
           ub = read.get_tag(umi_tag)
@@ -347,19 +335,10 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
 
         pos = read.reference_start if read.is_reverse else (read.reference_end-1)
 
-        try:
-            gn = read.get_tag(gene_tag)
-            reads_having_gene +=1
-        except KeyError:
-            gn=None
 
         # Ignore reads tagged as duplicates
         if read.is_duplicate:
             continue
-
-        if gn:   # POTENTIALLY PROBLEMATIC FORMATTING CUSTOMISATION
-            # e.g. RHOT2 or RHOF;LINC01089
-            genes[read.reference_name+str(pos)+strand].update( gn.split(";") )
 
         # Count depth for end
         ends[read.reference_name][pos][strand] += 1
@@ -367,102 +346,93 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
         if misprime:
             misprime_site[read.reference_name][pos][strand] += 1
 
-    # regions[contig][start] = (end,strand)
+    # regions[contig][start] = (count, pos, strand, misprime)
     regions = defaultdict(lambda: defaultdict(int))
 
     # Create potential counting regions
-    #ends[contig][pos][strand]
+    # ends[contig][pos][strand]
     print("Creating regions", file=sys.stderr)
     for contig in sorted(ends.keys()):
-      for pos in sorted(ends[contig].keys()):
-        for strand in sorted(ends[contig][pos].keys()):
-          count = ends[contig][pos][strand]
-          misprime = misprime_site[contig][pos][strand] >= count/2         # If at least half the reads are tagged as misprimed (I think it should be all, or none)
-          if count>=depth_threshold:
-              names=genes[contig+str(pos)+strand]   
-              if strand=='+':
-                  regions[contig][max(pos-region_size,0)] = (count,pos,strand,names,misprime)
-              else:
-                  regions[contig][pos] = (count,pos+region_size,strand,names,misprime)
+        for pos in sorted(ends[contig].keys()):
+            for strand in sorted(ends[contig][pos].keys()):
+                count    = ends[contig][pos][strand]
+                misprime = misprime_site[contig][pos][strand] >= count/2  # If at least half the reads are tagged as misprimed (I think it should be all, or none)
+                if count>=depth_threshold:
+                    if strand == '+':
+                        regions[contig][max(pos-region_size,0)] = (count, pos, strand, misprime)
+                    else:
+                        regions[contig][pos] = (count, pos+region_size, strand, misprime)
 
     # Find regions "too close" and drop the one with lowest depth
     print("Handling overlapping regions", file=sys.stderr)
     for contig in sorted(regions.keys()):
-      kept = {}
-      for strand in ['+','-']:
-        starts = sorted(x for x in regions[contig].keys() if regions[contig][x][2]==strand)
-        for i in range(len(starts)):
-          start = starts[i]
-          (depth, end, _, names, misprime) = regions[contig][start]
+        kept = {}
+        for strand in ['+','-']:
+            starts = sorted(x for x in regions[contig].keys() if regions[contig][x][2]==strand)
+            for i in range(len(starts)):
+                start = starts[i]
+                (depth, end, _, misprime) = regions[contig][start]
 
-          best = True
-          # Check if there was a better region upstream
-          i2 = i-1
-          while (i2>=0 and best):
-              (depth2, end2, _, _, misprime2) = regions[contig][starts[i2]]
-              if end2<start:
-                  break              # Doesn't overlap
+                best = True
+                # Check if there was a better region upstream
+                i2 = i-1
+                while (i2>=0 and best):
+                    (depth2, end2, _, misprime2) = regions[contig][starts[i2]]
+                    if end2<start:
+                        break              # Doesn't overlap
 
-              if misprime==misprime2 and depth2>depth:
-                  best = False       # Other one is better (deeper)
-              elif misprime and not misprime2:
-                  best = False       # Other one is not misprimed
-              i2 -= 1
+                    if misprime==misprime2 and depth2>depth:
+                        best = False       # Other one is better (deeper)
+                    elif misprime and not misprime2:
+                        best = False       # Other one is not misprimed
+                    i2 -= 1
 
-          # Check if there is a better region downstream
-          i2=i+1
-          while (i2<len(starts) and best):
-              (depth2, end2, _, _, misprime2) = regions[contig][starts[i2]]
-              if end<starts[i2]:
-                  break              # Doesn't overlap
+                # Check if there is a better region downstream
+                i2=i+1
+                while (i2<len(starts) and best):
+                    (depth2, end2, _, misprime2) = regions[contig][starts[i2]]
+                    if end<starts[i2]:
+                        break              # Doesn't overlap
 
-              if misprime==misprime2 and depth2>=depth:
-                  best = False       # Other one is better (deeper)
-              elif misprime and not misprime2:
-                  best = False       # Other one is not misprimed
-              i2 += 1
+                    if misprime==misprime2 and depth2>=depth:
+                        best = False       # Other one is better (deeper)
+                    elif misprime and not misprime2:
+                        best = False       # Other one is not misprimed
+                    i2 += 1
 
-          # We're the best of the overlapping!
-          if best:
-              kept[start] = (depth, end, strand, names, misprime)
-      regions[contig] = kept
+                # We're the best of the overlapping!
+                if best:
+                    kept[start] = (depth, end, strand, misprime)
+        regions[contig] = kept
 
     # Print regions
     print("Writing output "+polyA_peaks_gff, file=sys.stderr)
     gff = open(polyA_peaks_gff, "w")
     gff.write("##gff\n") ## atm its a gtf / gff2 like ensembl
 
+
     for contig in sorted(regions.keys()):
-      for pos in sorted(regions[contig].keys()):
-        (depth,end,strand,names,misprime) = regions[contig][pos]
-    
-    
-        # 0 to 1 based (was bed?)
-        pos = pos + 1 if strand == "-" else pos + 2
-        end = end + 1 if strand == "+" else end  
+        for pos in sorted(regions[contig].keys()):
 
-    
-        gene_name=""
-        if len(names)==0:
-            gene_name = "Unknown"  
-        else : 
-            gene_name = ",".join(names)
-        str_for_name = "f" if strand == "+" else "r"
-        pos_for_name = pos if strand == "-" else end
-        peak_name    = gene_name+":%s_%d_%s"%(contig, pos_for_name, str_for_name)
-    
+            (depth,end,strand,misprime) = regions[contig][pos]
 
-        # There is not bed, only gff
-        #12	polyAends	polyApeak	121802524	121802774	.	-	.	peakgene="RHOF"; peak="RHOF:121779162"; peakdepth="20"; misprime="False";    
-        detail='peakgene="%s"; peak="%s"; peakdepth="%d"; misprime="%s";'%(gene_name, peak_name, depth, str(misprime) )
-        gff.write("\t".join(str(x) for x in [contig,"polyAends","polyAends",pos,end,".",strand,".", detail ])+"\n")
+            # 0 to 1 based (was bed?)
+            pos = pos + 1 if strand == "-" else pos + 2
+            end = end + 1 if strand == "+" else end
+            str_for_name = "f" if strand == "+" else "r"
+            pos_for_name = pos if strand == "-" else end
+            peak_name    = "%s_%d_%s"%(contig, pos_for_name, str_for_name)
+
+            # There is no bed, only gtf
+            detail='peak="%s"; peakdepth="%d"; misprime="%s";'%(peak_name, depth, str(misprime) )
+            gff.write("\t".join(str(x) for x in [contig,"polyAends","polyAends",pos,end,".",strand,".", detail ])+"\n")
         
     
     gff.close()
     
     # Summary
-    print("Processed %d polyA reads, %d included (had %s and %s tags), %d of which had a tagged gene (0 is ok if no genes anotated with %s)"%(
-          reads_total, reads_considered,corrected_cell_barcode_tag ,umi_tag, reads_having_gene, gene_tag) )
+    print("Processed %d polyA reads, %d included (had %s and %s tags)"%(
+          reads_total, reads_considered,corrected_cell_barcode_tag ,umi_tag) )
     
     
 
@@ -521,7 +491,7 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, corrected
 
 
     # Run featureCounts
-    # Adds XT tag to bams:  XT:Z:Unknown:1_16442_r
+    # Adds XT tag to bams:  XT:Z:1_16442_r
     # -f count at local feature leve, not metafeature (gene)
     print(input_bam + " running featureCounts")
     temp_unfiltered            = os.path.join(temp_feature_counts_dir, os.path.splitext(os.path.basename(peak_anno_bam))[0]) # is an outputfile 
@@ -594,8 +564,7 @@ def count_from_annotated_bams(peak_anno_bams, input_from_dir, counts_root, corre
     for n in range(0,len(peak_anno_bams)) : 
         peak_anno_bam = peak_anno_bams[n] 
         counts_file   = counts_files[n]
-        #count_from_annotated_bam(peak_anno_bam, counts_file, corrected_cell_barcode_tag, umi_tag)
-    
+
         print(peak_anno_bam+" counting")
         
         ut_cmd = ["umi_tools", "count",
@@ -715,7 +684,6 @@ def quick_bam_check (bam_file, cell_tag, umi_tag, minMAPQ) :
     seen_cell_tag = False
     seen_umi_tag  = False
     seen_map_qual_ok = False
-    #seen_gene_tag = False Actually, don't check. Quitely likely there's no GN near the start, and it works without anywa.y.
     bam = pysam.AlignmentFile(bam_file,'rb')
 
     

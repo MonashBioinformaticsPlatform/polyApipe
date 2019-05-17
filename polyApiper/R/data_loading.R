@@ -50,13 +50,15 @@
 #' 
 #' @family peak counts loading functions
 #' 
-#' @importFrom S4Vectors  DataFrame
+#' @importFrom S4Vectors  DataFrame Rle 
 #' @importFrom dplyr select
 #' @importFrom utils read.table
 #' @importFrom Matrix sparseMatrix Matrix
 #' @importFrom DelayedMatrixStats colSums2
 #' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom HDF5Array saveHDF5SummarizedExperiment writeTENxMatrix
+#' @importFrom IRanges IRanges
+#' @import GenomicRanges 
 #' 
 #' @export
 load_peaks_counts_into_sce <- function(counts_file, 
@@ -340,17 +342,13 @@ load_peaks_counts_dir_into_sce <- function(
 #' @export
 read_polyA_peak_file_gtf <- function(gtf_file) {
    # Very specifically this format of gtf.
-   #Y	polyAends	polyApeak	20592383	20592633	.	+	.	peakgene="EIF1AY"; peak="EIF1AY:20592632"; peakdepth="64"; misprime="False";
-   #Y	polyAends	polyApeak	20843093	20843343	.	-	.	peakgene="Unknown"; peak="Unknown-Y-20843092"; peakdepth="14"; misprime="True";
-   #Y	polyAends	polyApeak	21257670	21257920	.	+	.	peakgene="Unknown"; peak="Unknown-Y-21257669"; peakdepth="12"; misprime="False";
-   #1	polyAends	polyAends	3630788	3631037	.	-	.	peakgene="Unknown"; peak="Unknown:1_3630788_r"; peakdepth="256"; misprime="False";
+   #Y	polyAends	polyApeak	20592383	20592633	.	+	.	peak="Y_20592632"_f; peakdepth="64"; misprime="False";
+   #1	polyAends	polyAends	3630788	3631037	.	-	.  peak="1_3630788_r"; peakdepth="256"; misprime="False";
    raw_gtf_table <- read_tsv(gtf_file, comment = "#", col_types = 'cccii?ccc', na=".",
                              col_names = c("chr","source","feature","start","end","score","strand","frame","attribute" )) 
    raw_gtf_table$attribute <- gsub('"','', str_trim(raw_gtf_table$attribute))
    
-   
-   #peakgene="EIF1AY"; peak="EIF1AY:20592632"; peakdepth="64"; misprime="False";
-   #peakgene=RP4-635E18.9; peak=RP4-635E18.8,RP4-635E18.9:11030527; peakdepth=16; misprime=False;
+   #peak="1_3630788_r"; peakdepth="256"; misprime="False";
    att_table <- tibble(attribute = raw_gtf_table$attribute, splitter=raw_gtf_table$attribute) %>% separate_rows(sep='; ', splitter)
    att_table$splitter <- gsub(';$', '', str_trim(att_table$splitter) )
    att_table <- dplyr::filter(att_table , splitter != "")
