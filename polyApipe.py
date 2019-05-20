@@ -11,8 +11,15 @@ from distutils.version import StrictVersion
 # module load subread
 
 # ./polyApipe.py -i test_files/demo/  -o xxxx
-# ./polyApipe.py -i data/demo/data/demo/SRR5259422_demo.bam  -o xxSRR5259422_demo
+# ./polyApipe.py -i test_files/demo/SRR5259354_demo.bam  -o xxxxSRR5259354_demo
+# ./polyApipe.py -i test_files/demo/SRR5259354_demo.bam test_files/demo/SRR5259422_demo.bam  -o xxxxtwo
+# ./polyApipe.py -i data/demo/ -o polyApiper/inst/extdata/demo_dataset/demo
+# ./polyApipe.py -i data/demo/SRR5259422_demo.bam  -o xxSRR5259422_demo
 # ./polyApipe.py -i test_files/bams_polyA/mini_polyA.bam -o xxxx   # alreayd polyA, but lots of r/f to see.
+
+
+
+
 
 parser = argparse.ArgumentParser(
     description="Count reads in polyA peaks. "+
@@ -71,6 +78,9 @@ running_args.add_argument('-p', '--peaks_gff', dest='peaks_gff', type=str, defau
                     help="If provided, use this gff file of peaks instead of making one from polyA reads. "+
                          "Will still try to make those polyA bams unless --polyA_bams also specified. "+
                          "This is a gtf format specifically as output by this script. See example data.")
+running_args.add_argument('--keep_interim_files', dest='keep_interim_files', action='store_true', default=False,
+                    help="Don't delete the intermediate files (merged polyA, annotated input bams)." +
+                         "For debugging or piecemeal runs." )
 running_args.add_argument('--skipchecks', dest='skip_checks', action='store_true', default=False,
                     help=argparse.SUPPRESS) # nothing to see here, move along.
 
@@ -123,11 +133,11 @@ def main ():
     ## Get polyA reads
     if not args.polyA_bams :   
         print("\nFinding polyA reads in each input bam file: ")
-        process_bams_to_polyA_bam(  input_bams     = input_bams, 
-                                    polyA_bam_root = polyA_bam_root, 
-                                    minpolyA       = args.minpolyA, 
-                                    minMAPQ        = args.minMAPQ, 
-                                    nonA_allowed   = args.nonA_allowed) 
+        process_bams_to_polyA_bam(  input_bams         = input_bams,
+                                    polyA_bam_root     = polyA_bam_root,
+                                    minpolyA           = args.minpolyA,
+                                    minMAPQ            = args.minMAPQ,
+                                    nonA_allowed       = args.nonA_allowed)
                                     
     else : # Or heres one we prepared earlier
         print("\nThe bam files provided have already been filtered to polyA reads. Skipping polyA filter step.")   
@@ -141,53 +151,69 @@ def main ():
     if args.skip_peaks : sys.exit( "\nRequested no peak calling. Finished." )                
                                 
         
-    ## Define polyA reads
+    ## Define polyA peaks
     if not args.peaks_gff :
         print("\nFinding peaks in merged polyA file: ")
-        process_polyA_ends_to_peaks(polyA_bam         = polyA_bam , 
-                                    polyA_peaks_gff   = polyA_peaks_gff,
-                                    depth_threshold   = args.depth_threshold, 
-                                    region_size       = args.region_size,
+        process_polyA_ends_to_peaks(polyA_bam          = polyA_bam ,
+                                    polyA_peaks_gff    = polyA_peaks_gff,
+                                    depth_threshold    = args.depth_threshold,
+                                    region_size        = args.region_size,
                                     corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
-                                    umi_tag           = args.umi_tag,
-                                    misprime_A_count  = args.misprime_A_count,
-                                    misprime_in       = args.misprime_in)
+                                    umi_tag            = args.umi_tag,
+                                    misprime_A_count   = args.misprime_A_count,
+                                    misprime_in        = args.misprime_in)
+
+        # Done peak finding, don't need merged polyA bam anymore (unless polyA bam(s) supplied)
+        if not args.keep_interim_files and not args.polyA_bams:
+            os.remove(polyA_bam)
+            os.remove(polyA_bam + ".bai")
+
     else :
        polyA_peaks_gff = args.peaks_gff
        print("\n Using provided gff file: " + polyA_peaks_gff )
-       
-        
+
+
+    if args.skip_anno : sys.exit( "\nRequested no annotation of original bams with peaks. Finished." )
  
-    if args.skip_anno : sys.exit( "\nRequested no annotation of original bams with peaks. Finished." )       
- 
- 
+
  
     ## Annotate ORIGINAL bams with peaks
     print("\nMaking filtered bam files annotated with peak hits (XT tag):")
     anno_bams = None
     if (not args.peak_anno_bams) :
         anno_bams = make_peak_hits_annotated_bams ( 
-                                    input_bams         = input_bams, 
-                                    input_from_dir     = input_from_dir,
-                                    polyA_peaks_gff    = polyA_peaks_gff, 
-                                    peak_anno_bam_root = peak_anno_bam_root, 
-                                    corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
-                                    threads            = args.threads)
+                                    input_bams          = input_bams,
+                                    input_from_dir      = input_from_dir,
+                                    polyA_peaks_gff     = polyA_peaks_gff,
+                                    peak_anno_bam_root  = peak_anno_bam_root,
+                                    corrected_cell_barcode_tag = args.corrected_cell_barcode_tag,
+                                    threads             = args.threads)
 
     else :
         anno_bams = input_bams
     
    
-    if args.skip_count : sys.exit( "\nRequested no counting. Finished." )       
-          
-    
+    if args.skip_count : sys.exit( "\nRequested no counting. Finished." )
+
+
+
+
     ## Now count with umi tools.
     print("\nCounting reads per peak per cell:")
     count_from_annotated_bams(      peak_anno_bams = anno_bams, 
                                     input_from_dir = input_from_dir, 
                                     counts_root    = counts_root, 
                                     corrected_cell_barcode_tag = args.corrected_cell_barcode_tag, 
-                                    umi_tag        = args.umi_tag ) 
+                                    umi_tag        = args.umi_tag )
+
+    # Remove those large anno bam files (unless they were the input!)
+    if not args.keep_interim_files and not args.peak_anno_bams :
+        for anno_bam in anno_bams :
+            os.remove(anno_bam)
+            os.remove(anno_bam+".bai")
+        if input_from_dir :
+            os.rmdir(peak_anno_bam_root)
+
  
     print("\nDone!")
 
@@ -203,8 +229,9 @@ def main ():
 
 def process_bams_to_polyA_bam (input_bams, polyA_bam_root, minpolyA, minMAPQ, nonA_allowed)  :
 
-    polyA_bam_file =  polyA_bam_root+".bam"
-    polyA_bam_dir  =  polyA_bam_root+"_individual_bams"
+    polyA_bam_file     =  polyA_bam_root+".bam"
+    polyA_bam_dir      =  polyA_bam_root+"_individual_bams"
+
 
     # Either the input was a single file, or a directory with a single file. 
     # Either way, no need for an individual_bams directory.
@@ -238,7 +265,6 @@ def process_bams_to_polyA_bam (input_bams, polyA_bam_root, minpolyA, minMAPQ, no
     pysam.index(polyA_bam_file)
     if not os.path.exists(polyA_bam_file+".bai")       : sys.exit("No bam index made for polyA-only bam file "+polyA_bam_file+" Something broke.")       
     print("Got all polyA reads into "+polyA_bam_file)
-
 
 
 
@@ -429,12 +455,14 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
         
     
     gff.close()
-    
+
+
+
     # Summary
     print("Processed %d polyA reads, %d included (had %s and %s tags)"%(
           reads_total, reads_considered,corrected_cell_barcode_tag ,umi_tag) )
     
-    
+
 
 
 ###############################################################################
