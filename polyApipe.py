@@ -163,10 +163,11 @@ def main ():
                                     misprime_A_count   = args.misprime_A_count,
                                     misprime_in        = args.misprime_in)
 
-        # Done peak finding, don't need merged polyA bam anymore (unless polyA bam(s) supplied)
+        # Done peak finding, don't need merged polyA (if any) bam anymore (unless polyA bam(s) supplied)
         if not args.keep_interim_files and not args.polyA_bams:
-            os.remove(polyA_bam)
-            os.remove(polyA_bam + ".bai")
+            if input_from_dir:
+                os.remove(polyA_bam)
+                os.remove(polyA_bam + ".bai")
 
     else :
        polyA_peaks_gff = args.peaks_gff
@@ -530,6 +531,7 @@ def make_peak_hit_annotated_bam (input_bam, peaks_gff , peak_anno_bam, corrected
     fc_cmd  = ["featureCounts", 
                input_bam, 
                "-t", "polyAends", "-g", "peak", "-F", "GTF", "-f", "-s", "1", "-R", "BAM",
+               "-T", str(threads),
                "-a", peaks_gff,
                "-o", temp_unfiltered  ]
     ranok = subprocess.call( fc_cmd ) 
@@ -601,7 +603,7 @@ def count_from_annotated_bams(peak_anno_bams, input_from_dir, counts_root, corre
                 "-I", peak_anno_bam,  "-S", counts_file]
         ranok = subprocess.call( ut_cmd )
         if not ranok == 0 :
-            sys.exit("Failed to run featureCounts correctly with cmd\n"+ " ".join(ut_cmd))
+            sys.exit("Failed to run umi_tools correctly ("+str(ranok)+") with cmd\n"+ " ".join(ut_cmd))
 
     return(counts_files)
 
