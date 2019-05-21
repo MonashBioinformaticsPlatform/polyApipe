@@ -66,17 +66,17 @@ running_args.add_argument('-t', '--threads', dest='threads', type=int, default=1
                     help="Num threads for multithreaded steps.")
 running_args.add_argument('--no_peaks', dest='skip_peaks', action='store_true', default=False,
                     help="Stop after making polyA bams. Do not try to find peaks in polyA files (implies --no_anno --no_count)" )          
-running_args.add_argument('--no_anno', dest='skip_anno', action='store_true', default=False,
-                    help="Stop after making merged polyA peaks gff file. Do not try to annotate peaks in bams files or count (implies --no_count)" )                                      
 running_args.add_argument('--no_count', dest='skip_count', action='store_true', default=False,
-                    help="Do not count reads in peaks (but still annotate them in bams.)" )
+                    help="Stop after making merged polyA peaks gff file. Do not try to count them, or annotate bams with them." )
+running_args.add_argument('--no_count_DEP', dest='skip_count_DEP', action='store_true', default=False,
+                    help="DEPRECATED - Do not count reads in peaks (but still annotate them in bams.)" )
 running_args.add_argument('--polyA_bams', dest='polyA_bams', action='store_true', default=False,
                     help="Skip polyA filtering step, the bams specified with '-i' are already filtered to polyA-containing reads only.")            
 running_args.add_argument('--peak_anno_bams', dest='peak_anno_bams', action='store_true', default=False,
-                    help="The bams provided have already been labelled with peaks regions e.t.c Jump to immediate counting.")
-running_args.add_argument('-p', '--peaks_gff', dest='peaks_gff', type=str, default=None,
+                    help="DEPRECATED - The bams provided have already been labelled with peaks regions e.t.c Jump to immediate counting.")
+running_args.add_argument('--peaks_gff', dest='peaks_gff', type=str, default=None,
                     help="If provided, use this gff file of peaks instead of making one from polyA reads. "+
-                         "Will still try to make those polyA bams unless --polyA_bams also specified. "+
+                         "Skips polyA filtering steps, incompatable with --polyA_bams "+
                          "This is a gtf format specifically as output by this script. See example data.")
 running_args.add_argument('--keep_interim_files', dest='keep_interim_files', action='store_true', default=False,
                     help="Don't delete the intermediate files (merged polyA, annotated input bams)." +
@@ -129,30 +129,32 @@ def main ():
     for input_bam in input_bams :
         quick_bam_check (input_bam, args.corrected_cell_barcode_tag, args.umi_tag, args.minMAPQ)
 
-    
-    ## Get polyA reads
-    if not args.polyA_bams :   
-        print("\nFinding polyA reads in each input bam file: ")
-        process_bams_to_polyA_bam(  input_bams         = input_bams,
-                                    polyA_bam_root     = polyA_bam_root,
-                                    minpolyA           = args.minpolyA,
-                                    minMAPQ            = args.minMAPQ,
-                                    nonA_allowed       = args.nonA_allowed)
-                                    
-    else : # Or heres one we prepared earlier
-        print("\nThe bam files provided have already been filtered to polyA reads. Skipping polyA filter step.")   
-        if len(input_bams) == 1  :
-            polyA_bam = input_bams[0]
-        else :
-            print("\nMerging polyA bam files.")
-            merge_bams(input_bams, polyA_bam, indexit=True)
-                
 
-    if args.skip_peaks : sys.exit( "\nRequested no peak calling. Finished." )                
-                                
-        
     ## Define polyA peaks
     if not args.peaks_gff :
+    
+        ## Get polyA reads
+        if not args.polyA_bams :
+            print("\nFinding polyA reads in each input bam file: ")
+            process_bams_to_polyA_bam(  input_bams         = input_bams,
+                                        polyA_bam_root     = polyA_bam_root,
+                                        minpolyA           = args.minpolyA,
+                                        minMAPQ            = args.minMAPQ,
+                                        nonA_allowed       = args.nonA_allowed)
+
+        else : # Or heres one we prepared earlier
+            print("\nThe bam files provided have already been filtered to polyA reads. Skipping polyA filter step.")
+            if len(input_bams) == 1  :
+                polyA_bam = input_bams[0]
+            else :
+                print("\nMerging polyA bam files.")
+                merge_bams(input_bams, polyA_bam, indexit=True)
+
+
+        if args.skip_peaks : sys.exit( "\nRequested no peak calling. Finished." )
+
+        
+
         print("\nFinding peaks in merged polyA file: ")
         process_polyA_ends_to_peaks(polyA_bam          = polyA_bam ,
                                     polyA_peaks_gff    = polyA_peaks_gff,
@@ -170,11 +172,12 @@ def main ():
                 os.remove(polyA_bam + ".bai")
 
     else :
-       polyA_peaks_gff = args.peaks_gff
-       print("\n Using provided gff file: " + polyA_peaks_gff )
+        # ALready had peaks file, so no need for polyA stuff at all.
+        polyA_peaks_gff = args.peaks_gff
+        print("\n Using provided gff file: " + polyA_peaks_gff )
 
 
-    if args.skip_anno : sys.exit( "\nRequested no annotation of original bams with peaks. Finished." )
+    if args.skip_count : sys.exit( "\nRequested no counting. Finished." )
  
 
  
@@ -194,7 +197,7 @@ def main ():
         anno_bams = input_bams
     
    
-    if args.skip_count : sys.exit( "\nRequested no counting. Finished." )
+    if args.skip_count_DEP : sys.exit( "\nRequested no counting. OLD. Finished." )
 
 
 
@@ -629,7 +632,11 @@ def check_params_ok (args) :
     if args.polyA_bams and args.peak_anno_bams : # ok, might happen for large dataset.
         sys.exit("Can't specify both --polyA_bams and --peak_anno_bams. If you do have both processed already. " + 
         "Try making the peaks gff file first (if not done alredy)( --polyA_bams with --no_count). "+
-        "Then run again with specifying --peaks_gff and --peak_anno_bams")    
+        "Then run again with specifying --peaks_gff and --peak_anno_bams")
+
+    if args.peaks_gff and args.polyA_bams :
+        sys.exit("Can't specify both --polyA_bams and and --peaks_gff. "+
+                 "If there is a peaks gff, polyA bams are no longer needed, use original bams for counting.")
 
     if args.out_root == "." or args.out_root.endswith("/") :
         sys.exit("--output should be a string, not a directory")
@@ -709,7 +716,7 @@ def quick_bam_check (bam_file, cell_tag, umi_tag, minMAPQ) :
 
     # Read chr names  (actually, only from bam, so no need.)
     # Look for one of each of those tags in top n reads. Counting won't happen without them!
-    top_n = 1000
+    top_n = 10000
     n     = 0
     seen_cell_tag = False
     seen_umi_tag  = False
@@ -747,7 +754,7 @@ def quick_bam_check (bam_file, cell_tag, umi_tag, minMAPQ) :
         " (--cell_barcode_tag / --umi_tag)") 
 
     if (not seen_map_qual_ok) :
-        sys.exit( "Checked the first "+str(top_n)+" reads of "+bam_file+" and did not see any reads that have min map quality "+str(minmapQ))
+        sys.exit( "Checked the first "+str(top_n)+" reads of "+bam_file+" and did not see any reads that have min map quality "+str(minMAPQ))
 
 
     print (bam_file+" ok")
