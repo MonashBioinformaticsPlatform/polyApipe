@@ -151,7 +151,9 @@ def main ():
                 merge_bams(input_bams, polyA_bam, indexit=True)
 
 
-        if args.skip_peaks : sys.exit( "\nRequested no peak calling. Finished." )
+        if args.skip_peaks :
+            print( "\nRequested no peak calling. Finished." )
+            sys.exit(0)
 
         
 
@@ -177,7 +179,9 @@ def main ():
         print("\n Using provided gff file: " + polyA_peaks_gff )
 
 
-    if args.skip_count : sys.exit( "\nRequested no counting. Finished." )
+    if args.skip_count :
+        print( "\nRequested no counting. Finished.")
+        sys.exit(0)
  
 
  
@@ -248,7 +252,7 @@ def process_bams_to_polyA_bam (input_bams, polyA_bam_root, minpolyA, minMAPQ, no
             os.mkdir(polyA_bam_dir)
         except OSError:  
             #sys.exit("Couldn't create polyA output directory (already exists?) "+polyA_bam_dir)
-            print("PolyA output dir exists arleady (TEMP)")
+            print("PolyA output dir exists already (TEMP)")
             pass
         
         #Potentially pararllelise here?
