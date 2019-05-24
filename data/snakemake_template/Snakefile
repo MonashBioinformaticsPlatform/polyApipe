@@ -1,0 +1,45 @@
+configfile: "config.yaml"
+localrules: all
+
+OUT_ROOT=config["out_root"]
+
+# Just process everything in input_bams
+samples, = glob_wildcards("input_bams/{sample}.bam")  # Must be input_bams/ not configurabel.
+print(samples)
+
+rule all:
+    # file listing, just a hack to mark processing of all files.
+    input:
+        expand("{out}_counts/{sample}_counts.tab.gz", sample=samples, out={OUT_ROOT})
+    output:
+        expand("{out}_processed_files.txt", out={OUT_ROOT})
+    shell:
+        "ls {OUT_ROOT}_counts > {output}"
+
+
+rule get_polyA:
+    input:
+        "input_bams/{sample}.bam"
+    output:
+        "{OUT_ROOT}_polyA/{sample}_polyA.bam"
+    shell:
+        "polyApipe.py -i {input} -o {OUT_ROOT}_polyA/{wildcards.sample} --no_peaks {config[extra_polyApipe_params]}"
+
+
+rule make_peaks_file:
+    input:
+        expand("{out}_polyA/{sample}_polyA.bam", sample=samples, out={OUT_ROOT} )
+    output:
+        "{OUT_ROOT}_polyA_peaks.gff"
+    shell:
+        "polyApipe.py -i {OUT_ROOT}_polyA -o {OUT_ROOT} --polyA_bams --no_count {config[extra_polyApipe_params]} && rm {OUT_ROOT}_polyA.bam {OUT_ROOT}_polyA.bam.bai"
+
+
+rule count_in_polyA :
+    input:
+        orig_bam="input_bams/{sample}.bam",
+        peak_file="{OUT_ROOT}_polyA_peaks.gff"
+    output:
+        count_files="{OUT_ROOT}_counts/{sample}_counts.tab.gz"
+    shell:
+        "polyApipe.py -i {input.orig_bam} -o {OUT_ROOT}_counts/{wildcards.sample} --peaks_gff {input.peak_file} {config[extra_polyApipe_params]}"

@@ -1,0 +1,3 @@
+# Overidden by snakemake --config xyz="whatever" on cmd line
+out_root: "out"
+extra_polyApipe_params: ""
