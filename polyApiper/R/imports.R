@@ -10,16 +10,19 @@
 #' @importFrom dplyr left_join distinct
 #' @importFrom purrr map_lgl
 #' @importFrom jsonlite read_json write_json
+#' @importFrom assertthat assert_that
 #'
 #' @importFrom HDF5Array
 #'     loadHDF5SummarizedExperiment saveHDF5SummarizedExperiment
+#'     quickResaveHDF5SummarizedExperiment
 #'     setHDF5DumpDir getHDF5DumpDir
 #'
 #' @importFrom DelayedArray
 #'     getRealizationBackend setRealizationBackend
 #'
 #' @importFrom SingleCellExperiment counts
-#' @importFrom SummarizedExperiment assay<-
+#' @importFrom SummarizedExperiment
+#'     assay rowData rowData<- rowRanges colData
 #'
 #' @importFrom scran
 #'     computeSumFactors

@@ -15,6 +15,7 @@ Imports:
     magrittr,
     dplyr,
     purrr,
+    assertthat,
     jsonlite,
     HDF5Array,
     BiocGenerics,

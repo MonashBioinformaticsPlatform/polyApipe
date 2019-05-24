@@ -5,6 +5,46 @@
 # Their inputs can also be the path to a file or directory.
 #
 
+#' @export
+pipeline_stages = c(
+    "load",
+    "assign"
+)
+
+#' Analyse the output of polyApipe.py
+#'
+#' Analyse the output of polyApipe.py. The resulting directory can be loaded
+#' with load_banquet.
+#'
+#' @export
+do_pipeline <- function(
+        out_path,
+        counts_file_dir,
+        peak_info_file,
+        organism,
+        stages=pipeline_stages) {
+
+    ensure_dir(out_path)
+
+    peak_counts <- file.path(out_path, "peak_counts")
+
+    if ("load" %in% stages) {
+        load_peaks_counts_dir_into_sce(
+            counts_file_dir=counts_file_dir,
+            peak_info_file=peak_info_file,
+            output=peak_counts,
+            replace=TRUE)
+    }
+
+    if ("assign" %in% stages) {
+        do_se_reassign(peak_counts, organism)
+    }
+
+    invisible(NULL)
+}
+
+
+
 
 #' @export
 se_counts_weitrix <- function(se, min_reads=50, min_prop=0.05, do_vooma=FALSE, plot_filename=NULL) {
@@ -50,9 +90,9 @@ do_se_counts_weitrix <- function(out_path, ...) working_in(out_path, {
 
 amalgamate <- function(vec) paste(unique(vec),collapse="/")
 
-#' Shift weitrix from peak counts
+#' Shifts and proportions weitrices from peak counts
 #'
-#' Convert a SummarizedExperiment of peak counts into a weitrix of shifts.
+#' Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.
 #'
 #' Peaks with less than min_present non-zero counts are discarded.
 #'
@@ -61,7 +101,7 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #' Cells with less than min_present non-missing shifts are discarded.
 #'
 #' @export
-peaks_shift_weitrix <- function(
+peaks_weitrices <- function(
         peaks_se, organism,
         n_per_row=100, n_per_col=100,
         remove_mispriming=TRUE, utr_or_extension_only=TRUE) {
@@ -103,26 +143,35 @@ peaks_shift_weitrix <- function(
 
     message("Kept ", nrow(rd), " peaks")
 
-    result <- counts_shift(assay(peaks_se,"counts"), grouping)
+    result_shift <- counts_shift(assay(peaks_se,"counts"), grouping)
+    result_prop <- counts_proportions(assay(peaks_se,"counts"), grouping)
 
-    result <- weitrix_filter(result, n_per_row, n_per_col)
+    result_shift <- weitrix_filter(result_shift, n_per_row, n_per_col)
+    # Use same filtering on props
+    result_prop <- result_prop[
+        rowData(result_prop)$group %in% rownames(result_shift),
+        colnames(result_shift)]
 
     gene_info <-
-        gene_info[match(rownames(result), gene_info$gene_id),,drop=F]
-    rowData(result)$symbol <- gene_info$symbol
-    rowData(result)$regions <- gene_info$regions
-    rowData(result)$biotype <- gene_info$biotype
+        gene_info[match(rownames(result_shift), gene_info$gene_id),,drop=F]
+    rowData(result_shift)$symbol <- gene_info$symbol
+    rowData(result_shift)$regions <- gene_info$regions
+    rowData(result_shift)$biotype <- gene_info$biotype
 
-    colData(result) <-
-        colData(peaks_se)[match(colnames(result), colnames(peaks_se)),,drop=F]
+    rowData(result_prop) <- rowData(peaks_se)[rownames(result_prop),]
 
-    result
+    colData(result_shift) <-
+        colData(peaks_se)[match(colnames(result_shift), colnames(peaks_se)),,drop=F]
+    colData(result_prop) <- colData(result_shift)
+
+    list(shift=result_shift, prop=result_prop)
 }
 
 #' @export
-do_peaks_shift_weitrix <- function(out_path, ...) working_in(out_path, {
-    result <- peaks_shift_weitrix(...)
-    saveHDF5SummarizedExperiment(result, file.path(out_path,"weitrix"), replace=TRUE)
+do_peaks_weitrices <- function(out_path, ...) working_in(out_path, {
+    result <- peaks_weitrices(...)
+    saveHDF5SummarizedExperiment(result$shift, file.path(out_path,"shift_weitrix"), replace=TRUE)
+    saveHDF5SummarizedExperiment(result$prop, file.path(out_path,"prop_weitrix"), replace=TRUE)
     invisible()
 })
 
