@@ -5,7 +5,7 @@ OUT_ROOT=config["out_root"]
 
 # Just process everything in input_bams
 samples, = glob_wildcards("input_bams/{sample}.bam")  # Must be input_bams/ not configurabel.
-print(samples)
+
 
 rule all:
     # file listing, just a hack to mark processing of all files.
@@ -19,11 +19,20 @@ rule all:
 
 rule get_polyA:
     input:
-        "input_bams/{sample}.bam"
+        "input_bams/{sample}.bam.bai"
     output:
         "{OUT_ROOT}_polyA/{sample}_polyA.bam"
     shell:
-        "polyApipe.py -i {input} -o {OUT_ROOT}_polyA/{wildcards.sample} --no_peaks {config[extra_polyApipe_params]}"
+        "polyApipe.py -i input_bams/{wildcards.sample}.bam -o {OUT_ROOT}_polyA/{wildcards.sample} --no_peaks {config[extra_polyApipe_params]}"
+
+
+rule index_bam:
+    input:
+        "input_bams/{sample}.bam"
+    output:
+        "input_bams/{sample}.bam.bai"
+    shell:
+        "samtools index input_bams/{wildcards.sample}.bam"
 
 
 rule make_peaks_file:

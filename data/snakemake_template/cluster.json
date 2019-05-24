@@ -4,7 +4,14 @@
         "account" : "qf35",
         "time" : "0-00:10:00",
         "mem" : 4000,
-        "c" : 1
+        "c" : 1,
+        "error":"slurm-%j.err"
+    },
+
+    "index_bam" :
+    {
+        "time" : "2:00:00",
+        "mem" : 12000
     },
 
     "get_polyA" :
