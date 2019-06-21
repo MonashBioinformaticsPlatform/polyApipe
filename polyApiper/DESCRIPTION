@@ -13,10 +13,15 @@ LazyData: true
 Imports: 
     methods,
     magrittr,
+    tibble,
     dplyr,
     purrr,
+    readr,
+    stringr,
+    tidyr,
     assertthat,
     jsonlite,
+    S4Vectors,
     HDF5Array,
     BiocGenerics,
     DelayedArray,
@@ -25,6 +30,7 @@ Imports:
     GO.db,
     GenomicRanges,
     GenomicFeatures,
+    plyranges,
     ensembldb,
     SummarizedExperiment,
     SingleCellExperiment,
@@ -35,9 +41,5 @@ Imports:
     limma,
     Matrix,
     DelayedMatrixStats,
-    readr,
-    stringr,
-    tibble,
-    tidyr,
     IRanges
 RoxygenNote: 6.1.1

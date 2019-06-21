@@ -7,6 +7,7 @@
 #'
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom magrittr %>%
+#' @importFrom tibble rownames_to_column
 #' @importFrom dplyr left_join distinct
 #' @importFrom purrr map_lgl
 #' @importFrom jsonlite read_json write_json
@@ -22,7 +23,7 @@
 #'
 #' @importFrom SingleCellExperiment counts
 #' @importFrom SummarizedExperiment
-#'     assay rowData rowData<- rowRanges colData
+#'     assay rowData rowData<- rowRanges colData colData<-
 #'
 #' @importFrom scran
 #'     computeSumFactors
@@ -34,7 +35,7 @@
 #'     rowSums colSums rbind cbind
 #'
 #' @importFrom plyranges
-#'     filter select mutate group_by ungroup anchor_5p anchor_3p
+#'     filter select mutate group_by ungroup arrange anchor_5p anchor_3p
 #'     join_overlap_inner_directed join_overlap_left_directed
 #'     setdiff_ranges_directed
 #'     flank_downstream bind_ranges disjoin_ranges_directed

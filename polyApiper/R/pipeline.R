@@ -8,7 +8,8 @@
 #' @export
 pipeline_stages = c(
     "load",
-    "assign"
+    "assign",
+    "weitrices"
 )
 
 #' Analyse the output of polyApipe.py
@@ -19,7 +20,13 @@ pipeline_stages = c(
 #' @export
 do_pipeline <- function(
         out_path,
+        
+        # Either:
+        counts_files,
+        batch_names="",
+        # Or:
         counts_file_dir,
+        
         peak_info_file,
         organism,
         stages=pipeline_stages) {
@@ -29,15 +36,34 @@ do_pipeline <- function(
     peak_counts <- file.path(out_path, "peak_counts")
 
     if ("load" %in% stages) {
-        load_peaks_counts_dir_into_sce(
-            counts_file_dir=counts_file_dir,
-            peak_info_file=peak_info_file,
-            output=peak_counts,
-            replace=TRUE)
+        message("-- load --")
+    
+        if (!missing(counts_file_dir)) {
+            assert_that(missing(counts_file_list))
+            
+            load_peaks_counts_dir_into_sce(
+                counts_file_dir=counts_file_dir,
+                peak_info_file=peak_info_file,
+                output=peak_counts,
+                replace=TRUE)
+        } else {
+            load_peaks_counts_files_into_sce(
+                counts_file_list=counts_files,
+                batch_names=batch_names,
+                peak_info_file=peak_info_file,
+                output=peak_counts,
+                replace=TRUE)
+        }
     }
 
     if ("assign" %in% stages) {
+        message("-- assign --")
         do_se_reassign(peak_counts, organism)
+    }
+    
+    if ("weitrices" %in% stages) {
+        message("-- weitrices --")
+        do_peaks_weitrices(out_path, peak_counts)
     }
 
     invisible(NULL)
@@ -102,20 +128,18 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #'
 #' @export
 peaks_weitrices <- function(
-        peaks_se, organism,
+        peaks_se,
         n_per_row=100, n_per_col=100,
         remove_mispriming=TRUE, utr_or_extension_only=TRUE) {
     peaks_se <- load_banquet(peaks_se)
-    organism <- load_banquet(organism)
     message(nrow(peaks_se), " x ", ncol(peaks_se), " counts")
 
-    peaks_se <- se_reassign(peaks_se, organism)
     n_present <- rowSums(assay(peaks_se,"counts") > 0)
     # This seems to be necessary:
     #keep <- rep(TRUE, nrow(peaks_se))
     keep <- n_present >= n_per_row
     if (remove_mispriming)
-        keep <- keep & (rowData(peaks_se)$misprime == "False")
+        keep <- keep & rowData(peaks_se)$misprime
     if (utr_or_extension_only)
         keep <- keep & (
             rowData(peaks_se)$region == "3'UTR" |
@@ -123,10 +147,10 @@ peaks_weitrices <- function(
 
     keep[is.na(keep)] <- FALSE
 
-    rd <- rowData(peaks_se)[keep,,drop=F] %>%
+    rd <- rowRanges(peaks_se)[keep,,drop=F] %>%
         as.data.frame() %>%
         rownames_to_column("name") %>%
-        arrange(ifelse(pstrand == "-", -pstart, pend)) %>%
+        arrange(ifelse(strand == "-", -start, end)) %>%
         group_by(gene_id) %>%
         filter(length(name) >= 2) %>%
         ungroup()

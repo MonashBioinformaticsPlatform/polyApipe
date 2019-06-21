@@ -4,8 +4,8 @@
 \alias{do_pipeline}
 \title{Analyse the output of polyApipe.py}
 \usage{
-do_pipeline(out_path, counts_file_dir, peak_info_file, organism,
-  stages = pipeline_stages)
+do_pipeline(out_path, counts_files, batch_names = "", counts_file_dir,
+  peak_info_file, organism, stages = pipeline_stages)
 }
 \description{
 Analyse the output of polyApipe.py. The resulting directory can be loaded

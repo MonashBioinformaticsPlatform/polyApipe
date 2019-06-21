@@ -15,6 +15,7 @@ se_reassign <- function(se, organism) {
     #        strand=rd$pstrand) %>%
 
     ranges <- rowRanges(se) %>%
+        select() %>%
         anchor_3p() %>%
         mutate(width=1) %>%
         join_overlap_left_directed(organism$regions)

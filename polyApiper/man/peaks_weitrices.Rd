@@ -4,7 +4,7 @@
 \alias{peaks_weitrices}
 \title{Shifts and proportions weitrices from peak counts}
 \usage{
-peaks_weitrices(peaks_se, organism, n_per_row = 100, n_per_col = 100,
+peaks_weitrices(peaks_se, n_per_row = 100, n_per_col = 100,
   remove_mispriming = TRUE, utr_or_extension_only = TRUE)
 }
 \description{
