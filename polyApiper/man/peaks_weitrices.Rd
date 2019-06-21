@@ -4,16 +4,18 @@
 \alias{peaks_weitrices}
 \title{Shifts and proportions weitrices from peak counts}
 \usage{
-peaks_weitrices(peaks_se, n_per_row = 100, n_per_col = 100,
-  remove_mispriming = TRUE, utr_or_extension_only = TRUE)
+peaks_weitrices(peaks_se, min_peak_count_avg = 0.01,
+  min_cell_count_vs_avg = 0.25, remove_mispriming = TRUE,
+  utr_or_extension_only = FALSE, do_computeSumFactors = FALSE,
+  do_vooma = FALSE)
 }
 \description{
 Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.
 }
 \details{
-Peaks with less than min_present non-zero counts are discarded.
+Cells with less than min_cell_count_vs_avg times the average cell count will be discarded.
+
+Peaks with less than an average of min_peak_count_avg counts will be discarded.
 
 Only genes with two or more peaks are included.
-
-Cells with less than min_present non-missing shifts are discarded.
 }

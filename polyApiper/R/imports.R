@@ -19,11 +19,13 @@
 #'     setHDF5DumpDir getHDF5DumpDir
 #'
 #' @importFrom DelayedArray
-#'     getRealizationBackend setRealizationBackend
+#'     getRealizationBackend setRealizationBackend rowsum
 #'
-#' @importFrom SingleCellExperiment counts
+#' @importFrom SingleCellExperiment 
+#'     SingleCellExperiment counts sizeFactors sizeFactors<-
+#'
 #' @importFrom SummarizedExperiment
-#'     assay rowData rowData<- rowRanges colData colData<-
+#'     SummarizedExperiment assay assay<- rowData rowData<- rowRanges colData colData<-
 #'
 #' @importFrom scran
 #'     computeSumFactors
@@ -32,10 +34,11 @@
 #'     normalize
 #'
 #' @importFrom BiocGenerics
-#'     rowSums colSums rbind cbind
+#'     rowSums colSums rowMeans rbind cbind
 #'
 #' @importFrom plyranges
-#'     filter select mutate group_by ungroup arrange anchor_5p anchor_3p
+#'     filter select mutate group_by ungroup arrange summarize
+#'     anchor_5p anchor_3p
 #'     join_overlap_inner_directed join_overlap_left_directed
 #'     setdiff_ranges_directed
 #'     flank_downstream bind_ranges disjoin_ranges_directed

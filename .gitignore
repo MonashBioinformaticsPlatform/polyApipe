@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 polyApiper_*.tar.gz
+build
+dist
+*.egg-info
