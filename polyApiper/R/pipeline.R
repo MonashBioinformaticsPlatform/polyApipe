@@ -7,55 +7,88 @@
 
 #' @rdname do_pipeline
 #' @export
-pipeline_stages = c(
+PIPELINE_STAGES = c(
     "load",
     "assign",
     "weitrices",
     "gene_expr_comp",
-    "shift_comp"
+    "shift_comp",
+    "report"
 )
+
 
 #' Analyse the output of polyApipe.py
 #'
 #' Analyse the output of polyApipe.py. The resulting directory can be loaded
-#' with load_banquet.
+#' with \code{load_banquet}.
+#'
+#' You can choose to run only specific stages of the pipeline with the \code{stages} argument, which is a character vector. See the global \code{PIPELINE_STAGES} for possible stages.
+#'
+#' @param out_path Output directory name.
+#'
+#' @param counts_files One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or \code{counts_file_dir} but not both.
+#'
+#' @param batch_names A vector of the batch/sample names, in same order as counts_files
+#'
+#' @param counts_file_dir A directory containing counts files. Give either this argument or \code{counts_files} but not both.
+#'
+#' @param peak_info_file GTF formatted peak file as output from polyApipe.py.
+#'
+#' @param organism Organism directory, as created by \code{do_ensembl_organism}.
+#' 
+#' @param stages Stages of the pipeline to run.
 #'
 #' @export
 do_pipeline <- function(
         out_path,
         
         # Either:
-        counts_files,
+        counts_files=NULL,
         batch_names="",
         # Or:
-        counts_file_dir,
+        counts_file_dir=NULL,
         
         peak_info_file,
         organism,
         
         # peaks_weitrices options
-        min_peak_count_avg=0.01,
-        min_cell_count_vs_avg=0.25,
+        present_min_count=1,
+        min_peak_present=0.05,
+        min_cell_present_vs_avg=0.5,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         # log expression level options
-        do_computeSumFactors=FALSE, 
+        do_computeSumFactors=TRUE, 
         do_vooma=FALSE,
         
         # finding components
         p=20,
+        
+        
+        title="polyApiper pipeline run",
                 
-        stages=pipeline_stages) {
+        stages=PIPELINE_STAGES) {
 
     ensure_dir(out_path)
+
+    # Record invocation
+    env <- environment() 
+    cat("do_pipeline(\n",
+        map_chr(names(formals()), 
+            ~paste0("    ",.,"=",
+                paste(deparse(env[[.]]), collapse="\n        ") )) %>%
+            paste(collapse=",\n"),
+        ")\n",
+        sep="",file=file.path(out_path,"invocation.txt"))
+
 
     peak_counts <- file.path(out_path, "raw_peak_counts")
 
     if ("load" %in% stages) {
         message("-- load --")
     
-        if (!missing(counts_file_dir)) {
-            assert_that(missing(counts_file_list))
+        if (!is.null(counts_file_dir)) {
+            assert_that(is.null(counts_file_list))
             
             load_peaks_counts_dir_into_sce(
                 counts_file_dir=counts_file_dir,
@@ -80,8 +113,9 @@ do_pipeline <- function(
     if ("weitrices" %in% stages) {
         message("-- weitrices --")
         do_peaks_weitrices(out_path, peak_counts,
-            min_peak_count_avg=min_peak_count_avg,
-            min_cell_count_vs_avg=min_cell_count_vs_avg,
+            present_min_count=present_min_count,
+            min_peak_present=min_peak_present,
+            min_cell_present_vs_avg=min_cell_present_vs_avg,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
             do_computeSumFactors=do_computeSumFactors, 
@@ -97,11 +131,18 @@ do_pipeline <- function(
     }
 
     if ("shift_comp" %in% stages) {
-        message("-- expr_components --")
+        message("-- shift_components --")
         do_weitrix_components(
             file.path(out_path, "shift"),
             file.path(out_path, "shift","weitrix"),
             p=p)
+    }
+    
+    if ("report" %in% stages) {
+        message("-- report --")
+        do_pipeline_report(
+            out_path,
+            title=paste(title,"- overview"))
     }
 
     invisible(NULL)
@@ -113,7 +154,6 @@ do_pipeline <- function(
 #' @export
 se_counts_weitrix <- function(se, do_computeSumFactors=FALSE, do_vooma=FALSE, plot_filename=NULL) {
     se <- load_banquet(se)
-    message(nrow(se), " x ", ncol(se), " counts")
     
     if (do_computeSumFactors)
         se <- computeSumFactors(se)
@@ -161,12 +201,13 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #' @export
 peaks_weitrices <- function(
         peaks_se,
-        min_peak_count_avg=0.01,
-        min_cell_count_vs_avg=0.25,
+        present_min_count=1,
+        min_peak_present=0.05,
+        min_cell_present_vs_avg=0.5,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         # log expression level options
-        do_computeSumFactors=FALSE, 
+        do_computeSumFactors=TRUE, 
         do_vooma=FALSE
         ) {
     peaks_se <- load_banquet(peaks_se)
@@ -177,7 +218,7 @@ peaks_weitrices <- function(
     
     keep <- rep(TRUE, nrow(peaks_se))    
     if (remove_mispriming)
-        keep <- keep & rowData(peaks_se)$misprime
+        keep <- keep & !rowData(peaks_se)$misprime
     if (utr_or_extension_only)
         keep <- keep & (
             rowData(peaks_se)$region == "3'UTR" |
@@ -187,12 +228,14 @@ peaks_weitrices <- function(
 
     # Remove low count cells and peaks
 
-    cell_counts <- colSums(assay(peaks_se_relevant,"counts"))
-    min_cell <- max(1, mean(cell_counts) * min_cell_count_vs_avg)
-    good_cells <- cell_counts >= min_cell
+    cell_present <- colSums(assay(peaks_se_relevant,"counts") >= present_min_count)
+    min_cell <- max(1, mean(cell_present) * min_cell_present_vs_avg)
+    good_cells <- cell_present >= min_cell
     
-    peak_means <- rowMeans(assay(peaks_se_relevant,"counts")[,good_cells,drop=F])
-    good_peaks <- peak_means >= min_peak_count_avg
+    peak_presence <- rowMeans(
+        assay(peaks_se_relevant,"counts")[,good_cells,drop=F] 
+        >= present_min_count)
+    good_peaks <- peak_presence >= min_peak_present
     
     peaks_se_final <- peaks_se_relevant[good_peaks, good_cells]
 

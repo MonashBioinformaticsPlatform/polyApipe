@@ -179,8 +179,9 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
 }
 
 
-
-
+#' Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub
+#'
+#' @export
 do_ensembl_organism <- function(
        out_path, species, version, hard_extension=20, extension=2000) {
     db_ahid <- get_ensdb(species, version)

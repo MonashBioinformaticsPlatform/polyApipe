@@ -1,0 +1,116 @@
+---
+params:
+    title: "polyApipe results overview"
+    input: "NULL"
+    wd: "."
+output: 
+    html_document:
+        code_folding: hide
+title: "`r params$title`"
+---
+
+```{r echo=F}
+knitr::opts_knit$set(root.dir=params$wd)
+knitr::opts_chunk$set(dpi=100, fig.width=6, fig.height=4)
+```
+
+```{r}
+library(SummarizedExperiment)
+library(dplyr)
+library(ggplot2)
+library(tibble)
+
+library(polyApiper)
+library(weitrix)
+
+
+banq <- load_banquet(params$input)
+
+n_input_cells <- ncol(banq$raw_peak_counts)
+
+raw_row_data <- as.data.frame(rowData(banq$raw_peak_counts))
+raw_col_data <- as.data.frame(colData(banq$raw_peak_counts))
+
+n_mispriming_peaks <- sum(raw_row_data$misprime)
+n_used_cells <- ncol(banq$gene_expr$weitrix)
+
+n_input_peaks <- nrow(banq$raw_peak_counts)
+n_used_peaks <- nrow(banq$peak_expr$weitrix)
+n_used_genes <- nrow(banq$gene_expr$weitrix)
+n_apa_peaks <- nrow(banq$prop$weitrix)
+n_apa_genes <- nrow(banq$shift$weitrix)
+
+effective_max_reads <- metadata(banq$shift$weitrix)$weitrix$effective_max_reads
+```
+
+`r strftime(Sys.time(),"%Y-%m-%d")`
+
+## Input
+
+<div style="font-size: 150%">
+`r n_input_cells` input cells.
+
+`r n_input_peaks` peaks detected. `r n_mispriming_peaks` peaks regarded as mispriming.
+
+Peak breakdown:
+</div>
+
+```{r}
+raw_row_data %>% 
+    mutate(region=ifelse(is.na(region),"unknown",region)) %>%
+    mutate(region=factor(region, c("intron","exon","3'UTR","extension","unknown"))) %>%
+    count(misprime, region) %>% 
+    spread(region, n, fill=0) %>%
+    knitr::kable()
+```
+
+## Used in analysis
+
+<div style="font-size: 150%">
+`r n_used_cells` cells included in analysis.
+
+Expression of `r n_used_genes` genes measured by aggregating `r n_used_peaks` peaks.
+
+APA of `r n_apa_genes` genes measured using `r n_apa_peaks` peaks.
+</div>
+
+```{r}
+raw_col_data %>%
+    rownames_to_column("rowname") %>% 
+    mutate(used = rowname %in% colnames(banq$gene_expr$weitrix)) %>%
+    arrange(-total_reads) %>%
+    rowid_to_column("rowid") %>%
+    ggplot(aes(x=rowid, y=total_reads, color=used)) + 
+    geom_point() +
+    scale_y_log10() +
+    labs(x="Cell (largest to smallest)", y="Total reads in peaks", color="Used")
+```
+
+## Gene expression components of variation
+
+```{r}
+components_seq_screeplot(banq$gene_expr$comp_seq, banq$gene_expr$rand_comp)
+```
+
+
+## APA components of variation
+
+```{r}
+components_seq_screeplot(banq$shift$comp_seq, banq$shift$rand_comp)
+```
+
+effective_max_reads is `r effective_max_reads`.
+
+(Biological variation places a maximum on the number of reads that provide further information about a gene in a cell.)
+
+## Parameters and versions
+
+```{r}
+writeLines(banq$invocation)
+```
+
+```{r}
+sessionInfo()
+```
+
+

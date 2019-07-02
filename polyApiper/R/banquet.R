@@ -54,6 +54,7 @@ identify <- function(path) {
     what <- "unknown"
     if (ext == "rds") what <- "rds"
     if (ext == "gff3") what <- "gff3"
+    if (ext == "txt") what <- "txt"
 
     list(
         path=path,
@@ -92,6 +93,9 @@ load_banquet <- function(path) {
     if (ident$what == "gff3")
         return(read_gff3(path))
         #TODO: set genome_info
+    
+    if (ident$what == "txt")
+        return(readLines(path))
 
     if (ident$what != "dir")
         stop("Don't know how to load: ",path)

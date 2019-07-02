@@ -9,7 +9,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom tibble rownames_to_column
 #' @importFrom dplyr left_join distinct
-#' @importFrom purrr map_lgl
+#' @importFrom purrr map_lgl map_chr
 #' @importFrom jsonlite read_json write_json
 #' @importFrom assertthat assert_that
 #'
