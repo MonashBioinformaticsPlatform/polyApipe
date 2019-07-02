@@ -68,8 +68,6 @@ running_args.add_argument('--no_peaks', dest='skip_peaks', action='store_true', 
                     help="Stop after making polyA bams. Do not try to find peaks in polyA files (implies --no_anno --no_count)" )          
 running_args.add_argument('--no_count', dest='skip_count', action='store_true', default=False,
                     help="Stop after making merged polyA peaks gff file. Do not try to count them, or annotate bams with them." )
-running_args.add_argument('--no_count_DEP', dest='skip_count_DEP', action='store_true', default=False,
-                    help="DEPRECATED - Do not count reads in peaks (but still annotate them in bams.)" )
 running_args.add_argument('--polyA_bams', dest='polyA_bams', action='store_true', default=False,
                     help="Skip polyA filtering step, the bams specified with '-i' are already filtered to polyA-containing reads only.")            
 running_args.add_argument('--peak_anno_bams', dest='peak_anno_bams', action='store_true', default=False,
@@ -200,11 +198,6 @@ def main ():
     else :
         anno_bams = input_bams
     
-   
-    if args.skip_count_DEP : sys.exit( "\nRequested no counting. OLD. Finished." )
-
-
-
 
     ## Now count with umi tools.
     print("\nCounting reads per peak per cell:")
