@@ -14,7 +14,7 @@ knitr::opts_knit$set(root.dir=params$wd)
 knitr::opts_chunk$set(dpi=100, fig.width=6, fig.height=4)
 ```
 
-```{r}
+```{r message=F}
 library(SummarizedExperiment)
 library(dplyr)
 library(ggplot2)

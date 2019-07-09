@@ -88,7 +88,7 @@ do_pipeline <- function(
         message("-- load --")
     
         if (!is.null(counts_file_dir)) {
-            assert_that(is.null(counts_file_list))
+            assert_that(is.null(counts_files))
             
             load_peaks_counts_dir_into_sce(
                 counts_file_dir=counts_file_dir,
@@ -246,10 +246,15 @@ peaks_weitrices <- function(
     rd <- rowRanges(peaks_se_final) %>%
         as.data.frame() %>%
         rownames_to_column("name") %>%
-        arrange(ifelse(strand == "-", -start, end))
+        arrange(gene_id, seqnames, strand, ifelse(strand == "-", -start, end))
+    # Grouped gene_id
+    # Leftovers grouped by chromosome, strand
+    # Within this, by position on strand
     
-    rd2 <- rd %>%
-        filter(!is.na(gene_id)) %>%
+    rd_with_gene <- rd %>%
+        filter(!is.na(gene_id))
+    
+    rd2 <- rd_with_gene %>%
         group_by(gene_id) %>%
         filter(length(name) >= 2) %>%
         ungroup()
@@ -271,8 +276,9 @@ peaks_weitrices <- function(
     
     # Outputs based on one or more peaks
     
-    good <- !is.na(rd$gene_id)
-    gene_counts <- rowsum(assay(peaks_se_final,"counts")[good,,drop=F], rd$gene_id[good])
+    gene_counts <- rowsum(
+        assay(peaks_se_final,"counts")[rd_with_gene$name,,drop=F], 
+        rd_with_gene$gene_id)
     
     result_gene <- SingleCellExperiment(list(counts=gene_counts))
     colData(result_gene) <- colData(peaks_se_final)
@@ -282,7 +288,9 @@ peaks_weitrices <- function(
     message("Compute normalized, log transformed counts")
     result_gene <- se_counts_weitrix(result_gene, 
         do_computeSumFactors=do_computeSumFactors, do_vooma=do_vooma)
-    result_peak <- se_counts_weitrix(peaks_se_final,
+    
+    # Use rd ordering    
+    result_peak <- se_counts_weitrix(peaks_se_final[rd$name,],
         do_computeSumFactors=do_computeSumFactors, do_vooma=do_vooma)
     
     # Outputs based on two or more peaks
