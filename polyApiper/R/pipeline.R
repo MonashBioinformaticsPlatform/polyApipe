@@ -63,6 +63,7 @@ do_pipeline <- function(
         
         # finding components
         p=20,
+        n_restarts=1,
         
         
         title="polyApiper pipeline run",
@@ -127,7 +128,7 @@ do_pipeline <- function(
         do_weitrix_components(
             file.path(out_path, "gene_expr"),
             file.path(out_path, "gene_expr","weitrix"),
-            p=p)
+            p=p, n_restarts=n_restarts)
     }
 
     if ("shift_comp" %in% stages) {
@@ -135,7 +136,7 @@ do_pipeline <- function(
         do_weitrix_components(
             file.path(out_path, "shift"),
             file.path(out_path, "shift","weitrix"),
-            p=p)
+            p=p, n_restarts=n_restarts)
     }
     
     if ("report" %in% stages) {
