@@ -8,7 +8,25 @@ polyApipe is a pipeline for examining Alternative PolyAdenylation (APA) from 10X
 Install the Python 3 part, from the command line:
 
 ```
-pip install git+https://github.com/swbioinf/polyApipe
+pip install --user git+https://github.com/swbioinf/polyApipe
+```
+
+You many need to add the polyApipe.py script to your \$PATH e.g. `export PATH=$PATH:/home/myusername/.local/bin/`
+
+Then, install the required tools:
+
+ * [samtools](http://www.htslib.org/) - [cite](https://www.ncbi.nlm.nih.gov/pubmed/19505943)
+ * [UMI-tools](https://github.com/CGATOxford/UMI-tools) - [cite](https://genome.cshlp.org/content/early/2017/01/18/gr.209601.116.abstract)
+ * [featureCounts](http://subread.sourceforge.net/) (version 1.5.3 or above) from Subread package - [cite](https://www.ncbi.nlm.nih.gov/pubmed/24227677)
+ * [pysam](https://github.com/pysam-developers/pysam) python module
+
+The quickest way is to use [conda](https://docs.conda.io/en/latest/). 
+After installing conda, the following will create a suitable environment, 
+which can be loaded with `conda activate`. Ensure it is python3.
+
+``` 
+conda create -n polyApipe_env  --override-channels -c bioconda -c conda-forge -c anaconda umi_tools=1.0.0-0 pysam samtools subread 
+conda activate polyApipe_env 
 ```
 
 Install the R part in R:
