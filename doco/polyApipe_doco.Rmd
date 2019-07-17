@@ -41,7 +41,7 @@ data for loading into R as follows;
    This step uses featureCounts [@Liao2014] and UMI-tools [@Smith2017] to count 
    cells per feature using the uncorrected UMI tags (and corrected cell barcodes).
    There will be one file per sample / input bam, saved as *_counts.tab.gz.
-3. **Load into R. ** The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis.
+3. **Calculate APA in R. ** The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis.
 4. **APA Analysis** 
 
 
@@ -120,7 +120,7 @@ Format _\<peakname\> \<cell\> \<number of reads\>_ .
 
 
 
-## Analyse APA in R
+## Calculate APA in R
 
 ```{r eval=FALSE}
 library(polyApiper)
@@ -142,11 +142,13 @@ polyApiper:::do_pipeline(
     organism      ="human_ens94",
     )
 
-# - Load results (individual objects are lazy-loaded when accessed)
-organism <- load_banquet("human_ens94")
-banq     <- load_banquet("pbmc8k_banquet")
 
+# To [re]-load for analysis.
+banq <- load_banquet("pbmc8k_banquet")
 ```
+
+Now the _pbmc8k_banquet_ directory has been setup - with APA information ready for 
+downstream analysis. 
 
 
 
