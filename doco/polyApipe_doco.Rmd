@@ -41,62 +41,17 @@ data for loading into R as follows;
    This step uses featureCounts [@Liao2014] and UMI-tools [@Smith2017] to count 
    cells per feature using the uncorrected UMI tags (and corrected cell barcodes).
    There will be one file per sample / input bam, saved as *_counts.tab.gz.
-3. **Load into R. ** The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis ...
-4. **APA Analysis** ...
-
-
-
-# Installation
-
-PolyApipe comes in two parts; a python3 script polyApipe.py and the R packages polyApiper.
-
-
-The PolyApipe.py python script depends on the following tools:
-
- * [samtools](http://www.htslib.org/) [@Li2009]
- * [UMI-tools](https://github.com/CGATOxford/UMI-tools) [@Smith2017]
- * [featureCounts](http://subread.sourceforge.net/) (version 1.5.3 or above) from Subread package [@Liao2014]
- * [pysam](https://github.com/pysam-developers/pysam) python module
-
-The quickest way to get that all installed (if you don't want to install everythign seperately) is to use [conda](https://docs.conda.io/en/latest/). 
-After installing conda, the following will create a suitable environment, 
-which can be loaded with conda activate. Ensure it is python3.
-
-```{sh eval=FALSE}
-conda create -n polyApipe_env  --override-channels -c bioconda -c conda-forge -c anaconda umi_tools=1.0.0-0 pysam samtools subread 
-conda activate polyApipe_env 
-```
-
------------------------
-
-Install the python (python3) part:
-
-```{sh eval=FALSE}
-# globally
-pip install git+https://github.com/swbioinf/polyApipe
-# Or in home directory, adding to path if neccessary
-pip install --user git+https://github.com/swbioinf/polyApipe
-export PATH=$PATH:/home/myusername/.local/bin/
-```
-
------------------------
-
-Finally, to install the polyAiper R package - run the following commands within R:
-
-```{sh eval=FALSE}
-BiocManager::install("pfh/weitrix")
-BiocManager::install("swbioinf/polyApipe/polyApiper")
-```
+3. **Load into R. ** The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis.
+4. **APA Analysis** 
 
 
 <!-- Todo: put polyApipe into its own conda? Yuck. -->
-<!-- setwd("/mnt/ceph/mbp/servers/bioinformatics-platform/home/sarah.williams/tmp_cmd_tests") -->
-
-
 
 
 
 # Example analysis - pbmc8k 
+
+<!-- setwd("/mnt/ceph/mbp/servers/bioinformatics-platform/home/sarah.williams/tmp_cmd_tests") -->
 
 The 'pbmc8k' dataset contains around 8000 PBMCs (peripheral blood mononuclear cell) 
 from a healthy individual. It is a publicly available dataset provided by 10X 
@@ -184,16 +139,15 @@ polyApiper:::do_pipeline(
     out_path      ="pbmc8k_banquet", 
     counts_files  ="pbmc8k_counts.tab.gz", 
     peak_info_file="pbmc8k_polyA_peaks.gff", 
-    organism      ="human_ens94")
+    organism      ="human_ens94",
+    )
 
 # - Load results (individual objects are lazy-loaded when accessed)
 organism <- load_banquet("human_ens94")
 banq     <- load_banquet("pbmc8k_banquet")
-names(banq)
 
 ```
 
-... _To be continued_ ...
 
 
 # Details
@@ -238,7 +192,7 @@ snakemake --jobs 30 --cores 8 --cluster-config cluster.json --cluster "sbatch -A
 ```
 
 
-# Parameters 
+## Parameters of polyApipe.py 
 
 Running `polyApipe.py --help` shows many options - described below. Most are rarely needed. 
 
