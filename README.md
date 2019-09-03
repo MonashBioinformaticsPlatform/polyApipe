@@ -12,7 +12,7 @@ An example analysis is [here](https://bioinformatics.erc.monash.edu/home/sarah.w
 Install the Python 3 part, from the command line:
 
 ```
-pip install --user git+https://github.com/swbioinf/polyApipe
+pip install --user git+https://github.com/MonashBioinformaticsPlatform/polyApipe
 ```
 
 You many need to add the polyApipe.py script to your \$PATH e.g. `export PATH=$PATH:/home/myusername/.local/bin/`
@@ -37,7 +37,7 @@ Install the R part in R:
 
 ```
 BiocManager::install("pfh/weitrix")
-BiocManager::install("swbioinf/polyApipe/polyApiper")
+BiocManager::install("MonashBioinformaticsPlatform/polyApipe/polyApiper")
 ```
 
 
