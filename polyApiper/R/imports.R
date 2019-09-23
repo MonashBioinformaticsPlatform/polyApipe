@@ -19,7 +19,7 @@
 #'     setHDF5DumpDir getHDF5DumpDir
 #'
 #' @importFrom DelayedArray
-#'     getRealizationBackend setRealizationBackend rowsum
+#'     getRealizationBackend setRealizationBackend rowsum getAutoBPPARAM realize
 #'
 #' @importFrom SingleCellExperiment 
 #'     SingleCellExperiment counts sizeFactors sizeFactors<-

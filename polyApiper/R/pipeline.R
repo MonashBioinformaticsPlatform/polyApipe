@@ -11,8 +11,8 @@ PIPELINE_STAGES = c(
     "load",
     "assign",
     "weitrices",
-    "gene_expr_comp",
     "shift_comp",
+    "gene_expr_comp",
     "report"
 )
 
@@ -20,7 +20,7 @@ PIPELINE_STAGES = c(
 #' Analyse the output of polyApipe.py
 #'
 #' Analyse the output of polyApipe.py. The resulting directory can be loaded
-#' with \code{load_banquet}.
+#' with \code{load_banquet}. An HTML report is also produced.
 #'
 #' You can choose to run only specific stages of the pipeline with the \code{stages} argument, which is a character vector. See the global \code{PIPELINE_STAGES} for possible stages.
 #'
@@ -35,8 +35,31 @@ PIPELINE_STAGES = c(
 #' @param peak_info_file GTF formatted peak file as output from polyApipe.py.
 #'
 #' @param organism Organism directory, as created by \code{do_ensembl_organism}.
+#'
+#' @param downsample If less than 1, downsample cells to this proportion when creating weitrices.
+#'
+#' @param remove_mispriming Remove peaks considered to be mispriming peaks.
+#'
+#' @param utr_or_extension_only Remove peaks in the 5'UTR, exons, or introns.
+#'
+#' @param present_min_count A gene is considered present in a cell with this count.
+#'
+#' @param min_cell_present_vs_avg Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells.
+#'
+#' @param min_peak_present After filtering cells, a peak is retained if it is present in this proportion of cells.
 #' 
-#' @param stages Stages of the pipeline to run.
+#' @param do_computeSumFactors Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.
+#'
+#' @param p Number of components to find.
+#'
+#' @param n_restarts Use this many restarts when finding components. If the scree plot is uneven, increasing this may produce better results.
+#'
+#' @param title Title to use in report.
+#'
+#' @param stages Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.
+#'
+#' @return 
+#' There is no return value. Results are placed in the \code{out_path} directory.
 #'
 #' @export
 do_pipeline <- function(
@@ -52,23 +75,26 @@ do_pipeline <- function(
         organism,
         
         # peaks_weitrices options
-        present_min_count=1,
-        min_peak_present=0.05,
-        min_cell_present_vs_avg=0.5,
+        downsample=1,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
+        present_min_count=1,
+        min_cell_present_vs_avg=0.5,
+        min_peak_present=0.01,
         # log expression level options
         do_computeSumFactors=TRUE, 
-        do_vooma=FALSE,
         
         # finding components
         p=20,
-        n_restarts=1,
-        
+        n_restarts=2,
         
         title="polyApiper pipeline run",
                 
-        stages=PIPELINE_STAGES) {
+        stages=1:length(PIPELINE_STAGES)) {
+
+    if (is.numeric(stages)) 
+        stages <- PIPELINE_STAGES[stages]
+    assert_that(all(stages %in% PIPELINE_STAGES))
 
     ensure_dir(out_path)
 
@@ -114,21 +140,13 @@ do_pipeline <- function(
     if ("weitrices" %in% stages) {
         message("-- weitrices --")
         do_peaks_weitrices(out_path, peak_counts,
+            downsample=downsample,
             present_min_count=present_min_count,
             min_peak_present=min_peak_present,
             min_cell_present_vs_avg=min_cell_present_vs_avg,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
-            do_computeSumFactors=do_computeSumFactors, 
-            do_vooma=do_vooma)
-    }
-    
-    if ("gene_expr_comp" %in% stages) {
-        message("-- expr_components --")
-        do_weitrix_components(
-            file.path(out_path, "gene_expr"),
-            file.path(out_path, "gene_expr","weitrix"),
-            p=p, n_restarts=n_restarts)
+            do_computeSumFactors=do_computeSumFactors)
     }
 
     if ("shift_comp" %in% stages) {
@@ -136,6 +154,14 @@ do_pipeline <- function(
         do_weitrix_components(
             file.path(out_path, "shift"),
             file.path(out_path, "shift","weitrix"),
+            design=~0, p=p, n_restarts=n_restarts)
+    }
+    
+    if ("gene_expr_comp" %in% stages) {
+        message("-- expr_components --")
+        do_weitrix_components(
+            file.path(out_path, "gene_expr"),
+            file.path(out_path, "gene_expr","weitrix"),
             p=p, n_restarts=n_restarts)
     }
     
@@ -153,34 +179,31 @@ do_pipeline <- function(
 
 
 #' @export
-se_counts_weitrix <- function(se, do_computeSumFactors=FALSE, do_vooma=FALSE, plot_filename=NULL) {
+se_counts_weitrix <- function(se, do_computeSumFactors=TRUE) {
     se <- load_banquet(se)
     
-    if (do_computeSumFactors)
-        se <- computeSumFactors(se)
-    else
+    if (do_computeSumFactors) {
+        se <- computeSumFactors(se) 
+        #Could specify this, but it crashed when I tested it:
+        # BPPARAM=getAutoBPPARAM()
+    } else
         sizeFactors(se) <- colSums(assay(se,"counts"))
     
     se <- normalize(se)
 
-    if (do_vooma) {
-        if (!is.null(plot_filename)) png(plot_filename)
-        # TODO: better design matrix
-        # TODO: low-memory solution
-        result <- as_weitrix(vooma(assay(se,"logcounts"), plot=TRUE, span=0.25))
-        rowData(result) <- rowData(se)
-        colData(result) <- colData(se)
-        if (!is.null(plot_filename)) dev.off()
-        return(result)
-    } else {
-        assay(se, "weights") <- matrix(1,nrow=nrow(se),ncol=ncol(se))
-        return(bless_weitrix(se, "logcounts", "weights"))
-    }
+    assay(se, "weights") <- matrix(1,nrow=nrow(se),ncol=ncol(se))
+    result <- bless_weitrix(se, "logcounts", "weights")
+    
+    rowData(result)$total_reads <- rowSums(assay(se,"counts"))
+    metadata(result)$weitrix$trend_formula <- "~splines::ns(log(total_reads),3)"
+    
+    result
 }
+
 
 #' @export
 do_se_counts_weitrix <- function(out_path, ...) working_in(out_path, {
-    result <- se_counts_weitrix(plot_filename=file.path(out_path,"vooma.png"), ...)
+    result <- se_counts_weitrix(...)
 
     saveHDF5SummarizedExperiment(result, file.path(out_path,"weitrix"), replace=TRUE)
     invisible()
@@ -202,16 +225,21 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #' @export
 peaks_weitrices <- function(
         peaks_se,
-        present_min_count=1,
-        min_peak_present=0.05,
-        min_cell_present_vs_avg=0.5,
+        downsample=1,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
+        present_min_count=1,
+        min_cell_present_vs_avg=0.5,
+        min_peak_present=0.05,
         # log expression level options
-        do_computeSumFactors=TRUE, 
-        do_vooma=FALSE
-        ) {
+        do_computeSumFactors=TRUE) {
     peaks_se <- load_banquet(peaks_se)
+    
+    if (downsample < 1) {
+       message("Downsampling ", downsample, " from ", ncol(peaks_se), " cells")
+       subsample <- runif(ncol(peaks_se)) <= downsample
+       peaks_se <- peaks_se[, subsample]
+    }
 
     message(nrow(peaks_se), " peaks in ", ncol(peaks_se), " cells")
 
@@ -230,8 +258,17 @@ peaks_weitrices <- function(
     # Remove low count cells and peaks
 
     cell_present <- colSums(assay(peaks_se_relevant,"counts") >= present_min_count)
-    min_cell <- max(1, mean(cell_present) * min_cell_present_vs_avg)
-    good_cells <- cell_present >= min_cell
+    
+    # Iteratively trim to a good set of cells
+    good_cells <- rep(TRUE,length(cell_present))
+    this_n_good <- sum(good_cells)
+    repeat {
+        min_cell <- max(1, mean(cell_present[good_cells]) * min_cell_present_vs_avg)
+        good_cells <- cell_present >= min_cell
+        last_n_good <- this_n_good
+        this_n_good <- sum(good_cells)
+        if (this_n_good == last_n_good) break;
+    } 
     
     peak_presence <- rowMeans(
         assay(peaks_se_relevant,"counts")[,good_cells,drop=F] 
@@ -239,6 +276,7 @@ peaks_weitrices <- function(
     good_peaks <- peak_presence >= min_peak_present
     
     peaks_se_final <- peaks_se_relevant[good_peaks, good_cells]
+    assay(peaks_se_final,"counts") <- realize(assay(peaks_se_final,"counts"))
 
     message("Kept ", nrow(peaks_se_final), " peaks in ", ncol(peaks_se_final), " cells")
 
@@ -277,9 +315,9 @@ peaks_weitrices <- function(
     
     # Outputs based on one or more peaks
     
-    gene_counts <- rowsum(
+    gene_counts <- realize(rowsum(
         assay(peaks_se_final,"counts")[rd_with_gene$name,,drop=F], 
-        rd_with_gene$gene_id)
+        rd_with_gene$gene_id))
     
     result_gene <- SingleCellExperiment(list(counts=gene_counts))
     colData(result_gene) <- colData(peaks_se_final)
@@ -288,11 +326,11 @@ peaks_weitrices <- function(
     
     message("Compute normalized, log transformed counts")
     result_gene <- se_counts_weitrix(result_gene, 
-        do_computeSumFactors=do_computeSumFactors, do_vooma=do_vooma)
+        do_computeSumFactors=do_computeSumFactors)
     
     # Use rd ordering    
     result_peak <- se_counts_weitrix(peaks_se_final[rd$name,],
-        do_computeSumFactors=do_computeSumFactors, do_vooma=do_vooma)
+        do_computeSumFactors=do_computeSumFactors)
     
     # Outputs based on two or more peaks
             

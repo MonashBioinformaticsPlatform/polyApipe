@@ -10,12 +10,12 @@
 PIPELINE_STAGES
 
 do_pipeline(out_path, counts_files = NULL, batch_names = "",
-  counts_file_dir = NULL, peak_info_file, organism,
-  present_min_count = 1, min_peak_present = 0.05,
-  min_cell_present_vs_avg = 0.5, remove_mispriming = TRUE,
-  utr_or_extension_only = FALSE, do_computeSumFactors = TRUE,
-  do_vooma = FALSE, p = 20, title = "polyApiper pipeline run",
-  stages = PIPELINE_STAGES)
+  counts_file_dir = NULL, peak_info_file, organism, downsample = 1,
+  remove_mispriming = TRUE, utr_or_extension_only = FALSE,
+  present_min_count = 1, min_cell_present_vs_avg = 0.5,
+  min_peak_present = 0.01, do_computeSumFactors = TRUE, p = 20,
+  n_restarts = 2, title = "polyApiper pipeline run",
+  stages = 1:length(PIPELINE_STAGES))
 }
 \arguments{
 \item{out_path}{Output directory name.}
@@ -30,11 +30,34 @@ do_pipeline(out_path, counts_files = NULL, batch_names = "",
 
 \item{organism}{Organism directory, as created by \code{do_ensembl_organism}.}
 
-\item{stages}{Stages of the pipeline to run.}
+\item{downsample}{If less than 1, downsample cells to this proportion when creating weitrices.}
+
+\item{remove_mispriming}{Remove peaks considered to be mispriming peaks.}
+
+\item{utr_or_extension_only}{Remove peaks in the 5'UTR, exons, or introns.}
+
+\item{present_min_count}{A gene is considered present in a cell with this count.}
+
+\item{min_cell_present_vs_avg}{Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells.}
+
+\item{min_peak_present}{After filtering cells, a peak is retained if it is present in this proportion of cells.}
+
+\item{do_computeSumFactors}{Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.}
+
+\item{p}{Number of components to find.}
+
+\item{n_restarts}{Use this many restarts when finding components. If the scree plot is uneven, increasing this may produce better results.}
+
+\item{title}{Title to use in report.}
+
+\item{stages}{Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.}
+}
+\value{
+There is no return value. Results are placed in the \code{out_path} directory.
 }
 \description{
 Analyse the output of polyApipe.py. The resulting directory can be loaded
-with \code{load_banquet}.
+with \code{load_banquet}. An HTML report is also produced.
 }
 \details{
 You can choose to run only specific stages of the pipeline with the \code{stages} argument, which is a character vector. See the global \code{PIPELINE_STAGES} for possible stages.

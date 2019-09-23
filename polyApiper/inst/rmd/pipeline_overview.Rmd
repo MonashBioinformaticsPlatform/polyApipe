@@ -59,7 +59,7 @@ Peak breakdown:
 raw_row_data %>% 
     mutate(region=ifelse(is.na(region),"unknown",region)) %>%
     mutate(region=factor(region, c("intron","exon","3'UTR","extension","unknown"))) %>%
-    count(misprime, region) %>% 
+    dplyr::count(misprime, region) %>% 
     spread(region, n, fill=0) %>%
     knitr::kable()
 ```
@@ -80,6 +80,7 @@ raw_col_data %>%
     mutate(used = rowname %in% colnames(banq$gene_expr$weitrix)) %>%
     arrange(-total_reads) %>%
     rowid_to_column("rowid") %>%
+    arrange(used) %>%
     ggplot(aes(x=rowid, y=total_reads, color=used)) + 
     geom_point() +
     scale_y_log10() +

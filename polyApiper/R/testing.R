@@ -102,11 +102,14 @@ do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank
     weitrix <- load_banquet(weitrix)
     organism <- load_banquet(organism)
 
-    ensure_dir(out_dir)
-
-    fit <- lmFit(weitrix_elist(weitrix), design)
+    #TODO: do this better
+    #TODO: comp can be reused when testing found components
+    comp <- weitrix_components(weitrix, p=0, design=design)
+    cal_weitrix <- weitrix_calibrate_trend(weitrix, comp)
+    fit <- lmFit(weitrix_elist(cal_weitrix), design)
     top <- limma_confects(fit, coef)
 
+    ensure_dir(out_dir)
     saveRDS(top, file.path(out_dir, "confects.rds"))
     write_csv(top$table, file.path(out_dir, "confects.csv"))
 
