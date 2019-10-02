@@ -98,7 +98,7 @@ enrichment <- function(stats, orgdb, min_size=1, ad=FALSE) {
 
 
 #' @export
-do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank=FALSE, unsigned=FALSE, ad=FALSE, only_changed=FALSE) {
+do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank=FALSE, ad=FALSE, only_changed=FALSE) {
     weitrix <- load_banquet(weitrix)
     organism <- load_banquet(organism)
 
@@ -113,29 +113,33 @@ do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank
     saveRDS(top, file.path(out_dir, "confects.rds"))
     write_csv(top$table, file.path(out_dir, "confects.csv"))
 
-    if (effect)
-        stats <- top$table$effect
-    else if (rank)
-        stats <- (nrow(top$table)+1-top$table$rank) * sign(top$table$effect)
-    else
-        stats <- top$table$confect
-    stats[is.na(stats)] <- 0.0
-    names(stats) <- top$table$name
-    if (unsigned) stats <- abs(stats)
-    if (only_changed) stats <- stats[ stats != 0 ]
-    rich <- enrichment(stats, organism$orgdb, ad=ad)
-
-    saveRDS(rich, file.path(out_dir, "enrichment.rds"))
-
-    df <- mutate(rich, gene_ids=map_chr(gene_ids, paste, collapse="/"))
-    write_csv(df, file.path(out_dir, "enrichment.csv"))
-
-    filter(df, novel_up+novel_down > size/5) %>%
-        write_csv(file.path(out_dir, "enrichment_brief.csv"))
+    for(signed in c(F,T)) {
+        if (effect)
+            stats <- top$table$effect
+        else if (rank)
+            stats <- (nrow(top$table)+1-top$table$rank) * sign(top$table$effect)
+        else
+            stats <- top$table$confect
+        stats[is.na(stats)] <- 0.0
+        names(stats) <- top$table$name
+        if (!signed) stats <- abs(stats)
+        if (only_changed) stats <- stats[ stats != 0 ]
+        rich <- enrichment(stats, organism$orgdb, ad=ad)
+        
+        suffix <- if (signed) "_signed" else "_unsigned"
+        
+        saveRDS(rich, file.path(out_dir, paste0("enrichment",suffix,".rds")))
+        
+        df <- mutate(rich, gene_ids=map_chr(gene_ids, paste, collapse="/"))
+        write_csv(df, file.path(out_dir, paste0("enrichment",suffix,".csv")))
+        
+        filter(df, novel_up+novel_down > size/5) %>%
+            write_csv(file.path(out_dir, paste0("enrichment",suffix,"_brief.csv")))
+    }
 }
 
 #' @export
-do_components_tests <- function(out_dir, input, organism, effect=FALSE, rank=FALSE, unsigned=FALSE, ad=FALSE, only_changed=FALSE) {
+do_components_tests <- function(out_dir, input, organism, effect=FALSE, rank=FALSE, ad=FALSE, only_changed=FALSE) {
     input <- load_banquet(input)
     organism <- load_banquet(organism)
 
@@ -148,7 +152,7 @@ do_components_tests <- function(out_dir, input, organism, effect=FALSE, rank=FAL
             message(comp_name)
             do_test(file.path(out_dir, paste0("p",p), comp_name),
                 input$weitrix, organism, comp_seq[[p]]$col, comp_name,
-                effect=effect, rank=rank, unsigned=unsigned, ad=ad, only_changed=only_changed)
+                effect=effect, rank=rank, ad=ad, only_changed=only_changed)
         }
     }
 }

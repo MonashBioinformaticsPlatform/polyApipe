@@ -39,8 +39,6 @@ n_used_peaks <- nrow(banq$peak_expr$weitrix)
 n_used_genes <- nrow(banq$gene_expr$weitrix)
 n_apa_peaks <- nrow(banq$prop$weitrix)
 n_apa_genes <- nrow(banq$shift$weitrix)
-
-effective_max_reads <- metadata(banq$shift$weitrix)$weitrix$effective_max_reads
 ```
 
 `r strftime(Sys.time(),"%Y-%m-%d")`
@@ -90,19 +88,15 @@ raw_col_data %>%
 ## Gene expression components of variation
 
 ```{r}
-components_seq_screeplot(banq$gene_expr$comp_seq, banq$gene_expr$rand_comp)
+components_seq_screeplot(banq$gene_expr$comp_seq)
 ```
 
 
 ## APA components of variation
 
 ```{r}
-components_seq_screeplot(banq$shift$comp_seq, banq$shift$rand_comp)
+components_seq_screeplot(banq$shift$comp_seq)
 ```
-
-effective_max_reads is `r effective_max_reads`.
-
-(Biological variation places a maximum on the number of reads that provide further information about a gene in a cell.)
 
 ## Parameters and versions
 

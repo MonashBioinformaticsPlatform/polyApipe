@@ -20,6 +20,7 @@
 #'
 #' @importFrom DelayedArray
 #'     getRealizationBackend setRealizationBackend rowsum getAutoBPPARAM realize
+#'     sweep
 #'
 #' @importFrom SingleCellExperiment 
 #'     SingleCellExperiment counts sizeFactors sizeFactors<-
@@ -34,7 +35,7 @@
 #'     normalize
 #'
 #' @importFrom BiocGenerics
-#'     rowSums colSums rowMeans rbind cbind
+#'     rowSums colSums rowMeans colMeans rbind cbind
 #'
 #' @importFrom plyranges
 #'     filter select mutate group_by ungroup arrange summarize

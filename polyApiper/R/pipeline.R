@@ -54,6 +54,8 @@ PIPELINE_STAGES = c(
 #'
 #' @param n_restarts Use this many restarts when finding components. If the scree plot is uneven, increasing this may produce better results.
 #'
+#' @param reweighting Give higher weight to rows and columns with many observations present and with the most even existing weights.
+#'
 #' @param title Title to use in report.
 #'
 #' @param stages Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.
@@ -86,7 +88,9 @@ do_pipeline <- function(
         
         # finding components
         p=20,
-        n_restarts=2,
+        n_restarts=1,
+        # Experimental! Adjust weights with weitrix_downweight_sparse.
+        reweighting=TRUE,
         
         title="polyApiper pipeline run",
                 
@@ -154,6 +158,7 @@ do_pipeline <- function(
         do_weitrix_components(
             file.path(out_path, "shift"),
             file.path(out_path, "shift","weitrix"),
+            reweighting=reweighting,
             design=~0, p=p, n_restarts=n_restarts)
     }
     
@@ -162,6 +167,7 @@ do_pipeline <- function(
         do_weitrix_components(
             file.path(out_path, "gene_expr"),
             file.path(out_path, "gene_expr","weitrix"),
+            reweighting=FALSE,
             p=p, n_restarts=n_restarts)
     }
     
@@ -377,15 +383,22 @@ do_peaks_weitrices <- function(out_path, ...) working_in(out_path, {
 
 
 #' @export
-do_weitrix_components <- function(out_path, weitrix, p=20, ...) working_in(out_path, {
+do_weitrix_components <- function(out_path, weitrix, reweighting=FALSE, p=20, ...) working_in(out_path, {
     weitrix <- load_banquet(weitrix)
-
-    comp_seq <- weitrix_components_seq(weitrix, p=p, ...)
+    
+    # Weight by effective number of observations, by inverse Simpson index ^2
+    weitrix_reweighted <- weitrix
+    if (reweighting)
+        weitrix_reweighted <- weitrix_downweight_sparse(weitrix_reweighted)
+    
+    comp_seq <- weitrix_components_seq(weitrix_reweighted, p=p, ...)
     saveRDS(comp_seq, file.path(out_path,"comp_seq.rds"))
 
-    rand_weitrix <- weitrix_randomize(weitrix)
-    rand_comp <- weitrix_components(rand_weitrix, p=1, ...)
-    saveRDS(rand_comp, file.path(out_path,"rand_comp.rds"))
+    # This makes little sense with the new weight dogma AND reweighting
+    # Better to extrapolate a line backwards in scree plot
+    #rand_weitrix <- weitrix_randomize(weitrix)
+    #rand_comp <- weitrix_components(rand_weitrix, p=1, ...)
+    #saveRDS(rand_comp, file.path(out_path,"rand_comp.rds"))
 
     invisible()
 })
