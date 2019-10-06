@@ -14,7 +14,7 @@ do_pipeline(out_path, counts_files = NULL, batch_names = "",
   remove_mispriming = TRUE, utr_or_extension_only = FALSE,
   present_min_count = 1, min_cell_present_vs_avg = 0.5,
   min_peak_present = 0.01, do_computeSumFactors = TRUE, p = 20,
-  n_restarts = 1, title = "polyApiper pipeline run",
+  n_restarts = 5, title = "polyApiper pipeline run",
   stages = 1:length(PIPELINE_STAGES))
 }
 \arguments{
@@ -46,7 +46,7 @@ do_pipeline(out_path, counts_files = NULL, batch_names = "",
 
 \item{p}{Number of components to find.}
 
-\item{n_restarts}{Use this many restarts when finding components. If the scree plot is uneven, increasing this may produce better results.}
+\item{n_restarts}{Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.}
 
 \item{title}{Title to use in report.}
 
