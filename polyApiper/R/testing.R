@@ -4,7 +4,7 @@
 #' Effect size is the Pearson correlation between the indicator variable for the gene-set and the statistic.
 #'
 #' @export
-enrichment <- function(stats, orgdb, min_size=1, ad=FALSE) {
+enrichment <- function(stats, orgdb, confident_sign, min_size=2, ad=FALSE) {
     gene_term <- AnnotationDbi::select(
             orgdb, keys=names(stats), keytype="ENSEMBL", columns="GOALL") %>%
         select(name=ENSEMBL, GOID=GOALL) %>%
@@ -69,10 +69,10 @@ enrichment <- function(stats, orgdb, min_size=1, ad=FALSE) {
         this_names <- result$names[[i]]
         this_novel <- setdiff(this_names, seen)
         novel[i] <- length(this_novel)
-        up[i] <- sum(stats[this_names] > 0)
-        down[i] <- sum(stats[this_names] < 0)
-        novel_up[i] <- sum(stats[this_novel] > 0)
-        novel_down[i] <- sum(stats[this_novel] < 0)
+        up[i] <- sum(confident_sign[this_names] > 0)
+        down[i] <- sum(confident_sign[this_names] < 0)
+        novel_up[i] <- sum(confident_sign[this_novel] > 0)
+        novel_down[i] <- sum(confident_sign[this_novel] < 0)
 
         seen <- c(seen, this_novel)
     }
@@ -98,7 +98,7 @@ enrichment <- function(stats, orgdb, min_size=1, ad=FALSE) {
 
 
 #' @export
-do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank=FALSE, ad=FALSE, only_changed=FALSE) {
+do_test <- function(out_dir, weitrix, organism, design, coef, confect=FALSE, rank=FALSE, ad=FALSE, fdr=0.05) {
     weitrix <- load_banquet(weitrix)
     organism <- load_banquet(organism)
 
@@ -107,24 +107,27 @@ do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank
     comp <- weitrix_components(weitrix, p=0, design=design)
     cal_weitrix <- weitrix_calibrate_trend(weitrix, comp)
     fit <- lmFit(weitrix_elist(cal_weitrix), design)
-    top <- limma_confects(fit, coef)
+    top <- limma_confects(fit, coef, full=TRUE, fdr=fdr)
 
     ensure_dir(out_dir)
     saveRDS(top, file.path(out_dir, "confects.rds"))
     write_csv(top$table, file.path(out_dir, "confects.csv"))
 
     for(signed in c(F,T)) {
-        if (effect)
-            stats <- top$table$effect
+        if (confect)
+            stats <- top$table$confect
         else if (rank)
             stats <- (nrow(top$table)+1-top$table$rank) * sign(top$table$effect)
         else
-            stats <- top$table$confect
+            stats <- top$table$effect
         stats[is.na(stats)] <- 0.0
         names(stats) <- top$table$name
         if (!signed) stats <- abs(stats)
-        if (only_changed) stats <- stats[ stats != 0 ]
-        rich <- enrichment(stats, organism$orgdb, ad=ad)
+        
+        confident_sign <- ifelse(is.na(top$table$confect),0,sign(top$table$effect))
+        names(confident_sign) <- top$table$name
+        
+        rich <- enrichment(stats, organism$orgdb, ad=ad, confident_sign=confident_sign)
         
         suffix <- if (signed) "_signed" else "_unsigned"
         
@@ -139,7 +142,7 @@ do_test <- function(out_dir, weitrix, organism, design, coef, effect=FALSE, rank
 }
 
 #' @export
-do_components_tests <- function(out_dir, input, organism, effect=FALSE, rank=FALSE, ad=FALSE, only_changed=FALSE) {
+do_components_tests <- function(out_dir, input, organism, confect=FALSE, rank=FALSE, ad=FALSE, fdr=0.05) {
     input <- load_banquet(input)
     organism <- load_banquet(organism)
 
@@ -152,7 +155,14 @@ do_components_tests <- function(out_dir, input, organism, effect=FALSE, rank=FAL
             message(comp_name)
             do_test(file.path(out_dir, paste0("p",p), comp_name),
                 input$weitrix, organism, comp_seq[[p]]$col, comp_name,
-                effect=effect, rank=rank, ad=ad, only_changed=only_changed)
+                confect=confect, rank=rank, ad=ad, fdr=fdr)
         }
     }
 }
+
+
+
+
+
+
+

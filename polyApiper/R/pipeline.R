@@ -5,7 +5,7 @@
 # Their inputs can also be the path to a file or directory.
 #
 
-#' @rdname do_pipeline
+
 #' @export
 PIPELINE_STAGES = c(
     "load",
@@ -22,7 +22,7 @@ PIPELINE_STAGES = c(
 #' Analyse the output of polyApipe.py. The resulting directory can be loaded
 #' with \code{load_banquet}. An HTML report is also produced.
 #'
-#' You can choose to run only specific stages of the pipeline with the \code{stages} argument, which is a character vector. See the global \code{PIPELINE_STAGES} for possible stages.
+#' You can choose to run only specific stages of the pipeline with the \code{stages} argument. See the global \code{PIPELINE_STAGES} for possible stages. \code{stages} is a character vector or an integer vector indexing into \code{PIPELINE_STAGES}.
 #'
 #' @param out_path Output directory name.
 #'
@@ -59,7 +59,7 @@ PIPELINE_STAGES = c(
 #' @param stages Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.
 #'
 #' @return 
-#' There is no return value. Results are placed in the \code{out_path} directory.
+#' There is no return value. Results are placed in the \code{out_path} directory. They can be loaded using \code{load_banquet(out_path)}.
 #'
 #' @export
 do_pipeline <- function(
@@ -135,6 +135,11 @@ do_pipeline <- function(
     if ("assign" %in% stages) {
         message("-- assign --")
         do_se_reassign(peak_counts, organism)
+        
+        write_gff3(
+            load_banquet(peak_counts),
+            file.path(out_path, "peaks.gff3"), 
+            index=TRUE)
     }
     
     if ("weitrices" %in% stages) {
@@ -174,6 +179,7 @@ do_pipeline <- function(
 
     invisible(NULL)
 }
+
 
 
 

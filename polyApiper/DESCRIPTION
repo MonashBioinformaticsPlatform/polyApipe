@@ -1,11 +1,15 @@
 Package: polyApiper
 Title: R part of polyApipe
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Paul",
+Authors@R:
+    c(person(given = "Sarah",
+           family = "Williams",
+           role = c("aut"),
+           email = "sarah.williams1@monash.edu"),
+      person(given = "Paul",
            family = "Harrison",
            role = c("aut", "cre"),
-           email = "paul.harrison@monash.edu")
+           email = "paul.harrison@monash.edu"))
 Description: Produce and easily load a banquet of analysis.
 License: LGPL-2.1 | file LICENSE
 Encoding: UTF-8

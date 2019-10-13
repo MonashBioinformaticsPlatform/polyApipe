@@ -1,0 +1,15 @@
+destination: ../docs/polyApiper
+
+
+reference:
+- title: Main pipeline functions
+  contents:
+  - do_ensembl_organism
+  - do_pipeline
+- title: After the pipeline has run
+  contents:
+  - load_banquet
+- title: Lower level functions to load from polyApipe.py
+  contents:
+  - starts_with("load_peaks_")
+  - read_polyA_peak_file_gtf

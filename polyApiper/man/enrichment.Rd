@@ -4,7 +4,7 @@
 \alias{enrichment}
 \title{Confident-correlation gene-set enrichment}
 \usage{
-enrichment(stats, orgdb, min_size = 1, ad = FALSE)
+enrichment(stats, orgdb, confident_sign, min_size = 2, ad = FALSE)
 }
 \description{
 Effect size is the Pearson correlation between the indicator variable for the gene-set and the statistic.
