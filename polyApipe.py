@@ -18,8 +18,7 @@ from distutils.version import StrictVersion
 # ./polyApipe.py -i test_files/bams_polyA/mini_polyA.bam -o xxxx   # alreayd polyA, but lots of r/f to see.
 
 
-
-
+__version__='0.1.0' # Keep in sync with polyapiper
 
 parser = argparse.ArgumentParser(
     description="Count reads in polyA peaks. "+
@@ -28,11 +27,15 @@ parser = argparse.ArgumentParser(
         "(2) Count how many reads per sample fall in each polyA peak.",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter )#
 
+parser.add_argument('-v', '--version', action='version',
+                    version='%(prog)s {version}'.format(version=__version__))
+
+
 main_args  = parser.add_argument_group('Main')
 main_args.add_argument('-i','--input', dest='input', type=str, nargs='+',required=True,
                      help="A bam file, bam files, or single directory of bam files.")                    
 main_args.add_argument('-o','--output',dest='out_root', type=str,required=True,
-                     help="Name root to use for output files.")
+	             help="Name root to use for output files.")
 
 config_args  = parser.add_argument_group('PolyA peak options', 'Set peak-level configs')
 config_args.add_argument('--depth_threshold', dest='depth_threshold', type=int, default=10,
@@ -62,6 +65,8 @@ config_args.add_argument('--umi_tag', dest='umi_tag', type=str, default='UR',
 
 
 running_args  = parser.add_argument_group('Running', 'For changing how this script runs. Stop/start on polyA step e.t.c')
+#running_args.add_argument('-v', '--version', dest='print_version', action='store_true', default='False',
+#                    help="Print version and exit.")
 running_args.add_argument('-t', '--threads', dest='threads', type=int, default=1,
                     help="Num threads for multithreaded steps.")
 running_args.add_argument('--no_peaks', dest='skip_peaks', action='store_true', default=False,
@@ -81,8 +86,6 @@ running_args.add_argument('--keep_interim_files', dest='keep_interim_files', act
                          "For debugging or piecemeal runs." )
 running_args.add_argument('--skipchecks', dest='skip_checks', action='store_true', default=False,
                     help=argparse.SUPPRESS) # nothing to see here, move along.
-
-
 
 
 args = parser.parse_args()
