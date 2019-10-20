@@ -6,4 +6,5 @@ polyApiper_*.tar.gz
 build
 dist
 *.egg-info
+*.Rcheck
 doco/polyApipe_doco.html
