@@ -76,7 +76,7 @@ identify <- function(path) {
 #'
 #' @export
 load_banquet <- function(path) {
-    if (!is(path,"character"))
+    if (!is(path,"character") || length(path) != 1)
         return(path)
 
     if (!file.exists(path))

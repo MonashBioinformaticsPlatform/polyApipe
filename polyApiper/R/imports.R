@@ -8,8 +8,8 @@
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom magrittr %>%
 #' @importFrom tibble rownames_to_column
-#' @importFrom dplyr left_join distinct
-#' @importFrom purrr map_lgl map_chr
+#' @importFrom dplyr left_join distinct tibble
+#' @importFrom purrr map map_lgl map_chr pmap_df
 #' @importFrom jsonlite read_json write_json
 #' @importFrom assertthat assert_that
 #'
@@ -52,7 +52,17 @@
 #'
 #' @importFrom AnnotationHub AnnotationHub
 #'
-#' @importFrom limma lmFit vooma
+#' @importFrom limma lmFit vooma wilcoxGST
+#'
+#' @importFrom msigdbr msigdbr
+#'
+#' @importFrom GSEABase description geneIds
+#'
+#' @importFrom fgsea fgsea
+#'
+#' @importFrom shiny 
+#'      shinyApp fluidPage titlePanel tabPanel navlistPanel
+#'      selectizeInput updateSelectizeInput
 #'
 NULL
 

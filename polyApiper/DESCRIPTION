@@ -45,5 +45,8 @@ Imports:
     limma,
     Matrix,
     DelayedMatrixStats,
-    IRanges
+    IRanges,
+    msigdbr,
+    GSEABase,
+    shiny
 RoxygenNote: 6.1.1

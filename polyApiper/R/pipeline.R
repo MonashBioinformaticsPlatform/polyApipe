@@ -44,7 +44,9 @@ PIPELINE_STAGES = c(
 #'
 #' @param present_min_count A gene is considered present in a cell with this count.
 #'
-#' @param min_cell_present_vs_avg Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells.
+#' @param cells_to_use Character vector of cells to use.
+#'
+#' @param min_cell_present_vs_avg Applies only if "cells_to_use" isn't given. Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells. 0.5 would be a reasonable value, or 0.75 to be conservative.
 #'
 #' @param min_peak_present After filtering cells, a peak is retained if it is present in this proportion of cells.
 #' 
@@ -79,7 +81,8 @@ do_pipeline <- function(
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         present_min_count=1,
-        min_cell_present_vs_avg=0.5,
+        cells_to_use=NULL,
+        min_cell_present_vs_avg=NULL,
         min_peak_present=0.01,
         # log expression level options
         do_computeSumFactors=TRUE, 
@@ -112,7 +115,7 @@ do_pipeline <- function(
     peak_counts <- file.path(out_path, "raw_peak_counts")
 
     if ("load" %in% stages) {
-        message("-- load --")
+        message("-- 1/6 load --")
     
         if (!is.null(counts_file_dir)) {
             assert_that(is.null(counts_files))
@@ -133,21 +136,22 @@ do_pipeline <- function(
     }
 
     if ("assign" %in% stages) {
-        message("-- assign --")
+        message("-- 2/6 assign --")
         do_se_reassign(peak_counts, organism)
         
         write_gff3(
-            load_banquet(peak_counts),
+            rowRanges(load_banquet(peak_counts)),
             file.path(out_path, "peaks.gff3"), 
             index=TRUE)
     }
     
     if ("weitrices" %in% stages) {
-        message("-- weitrices --")
+        message("-- 3/6 weitrices --")
         do_peaks_weitrices(out_path, peak_counts,
             downsample=downsample,
             present_min_count=present_min_count,
             min_peak_present=min_peak_present,
+            cells_to_use=cells_to_use,
             min_cell_present_vs_avg=min_cell_present_vs_avg,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
@@ -155,7 +159,7 @@ do_pipeline <- function(
     }
 
     if ("shift_comp" %in% stages) {
-        message("-- shift_components --")
+        message("-- 4/6 shift_components --")
         do_weitrix_components(
             file.path(out_path, "shift"),
             file.path(out_path, "shift","weitrix"),
@@ -163,7 +167,7 @@ do_pipeline <- function(
     }
     
     if ("gene_expr_comp" %in% stages) {
-        message("-- expr_components --")
+        message("-- 5/6 expr_components --")
         do_weitrix_components(
             file.path(out_path, "gene_expr"),
             file.path(out_path, "gene_expr","weitrix"),
@@ -171,7 +175,7 @@ do_pipeline <- function(
     }
     
     if ("report" %in% stages) {
-        message("-- report --")
+        message("-- 6/6 report --")
         do_pipeline_report(
             out_path,
             title=paste(title,"- overview"))
@@ -235,10 +239,13 @@ peaks_weitrices <- function(
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         present_min_count=1,
-        min_cell_present_vs_avg=0.5,
+        cells_to_use=NULL,
+        min_cell_present_vs_avg=NULL,
         min_peak_present=0.05,
         # log expression level options
         do_computeSumFactors=TRUE) {
+    assert_that((!is.null(cells_to_use)) + (!is.null(min_cell_present_vs_avg)) == 1)
+
     peaks_se <- load_banquet(peaks_se)
     
     if (downsample < 1) {
@@ -262,19 +269,25 @@ peaks_weitrices <- function(
     peaks_se_relevant <- peaks_se[keep,]
 
     # Remove low count cells and peaks
-
-    cell_present <- colSums(assay(peaks_se_relevant,"counts") >= present_min_count)
-    
-    # Iteratively trim to a good set of cells
-    good_cells <- rep(TRUE,length(cell_present))
-    this_n_good <- sum(good_cells)
-    repeat {
-        min_cell <- max(1, mean(cell_present[good_cells]) * min_cell_present_vs_avg)
-        good_cells <- cell_present >= min_cell
-        last_n_good <- this_n_good
+        
+    if (!is.null(cells_to_use)) {
+        good_cells <- cells_to_use[cells_to_use %in% colnames(peaks_se_relevant)]
+        assert_that(length(good_cells) >= 1)
+        
+    } else {
+        cell_present <- colSums(assay(peaks_se_relevant,"counts") >= present_min_count)
+        
+        # Iteratively trim to a good set of cells
+        good_cells <- rep(TRUE,length(cell_present))
         this_n_good <- sum(good_cells)
-        if (this_n_good == last_n_good) break;
-    } 
+        repeat {
+            min_cell <- max(1, mean(cell_present[good_cells]) * min_cell_present_vs_avg)
+            good_cells <- cell_present >= min_cell
+            last_n_good <- this_n_good
+            this_n_good <- sum(good_cells)
+            if (this_n_good == last_n_good) break;
+        } 
+    }
     
     peak_presence <- rowMeans(
         assay(peaks_se_relevant,"counts")[,good_cells,drop=F] 

@@ -7,9 +7,10 @@
 do_pipeline(out_path, counts_files = NULL, batch_names = "",
   counts_file_dir = NULL, peak_info_file, organism, downsample = 1,
   remove_mispriming = TRUE, utr_or_extension_only = FALSE,
-  present_min_count = 1, min_cell_present_vs_avg = 0.5,
-  min_peak_present = 0.01, do_computeSumFactors = TRUE, p = 20,
-  n_restarts = 5, title = "polyApiper pipeline run",
+  present_min_count = 1, cells_to_use = NULL,
+  min_cell_present_vs_avg = NULL, min_peak_present = 0.01,
+  do_computeSumFactors = TRUE, p = 20, n_restarts = 5,
+  title = "polyApiper pipeline run",
   stages = 1:length(PIPELINE_STAGES))
 }
 \arguments{
@@ -33,7 +34,9 @@ do_pipeline(out_path, counts_files = NULL, batch_names = "",
 
 \item{present_min_count}{A gene is considered present in a cell with this count.}
 
-\item{min_cell_present_vs_avg}{Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells.}
+\item{cells_to_use}{Character vector of cells to use.}
+
+\item{min_cell_present_vs_avg}{Applies only if "cells_to_use" isn't given. Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells. 0.5 would be a reasonable value, or 0.75 to be conservative.}
 
 \item{min_peak_present}{After filtering cells, a peak is retained if it is present in this proportion of cells.}
 

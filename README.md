@@ -60,6 +60,9 @@ polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
 ```
 library(polyApiper)
 
+# - Start a worker pool
+BiocParallel::bpstart( DelayedArray::getAutoBPPARAM() )
+
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub
 # - Classify genomic regions into exon,intron,3'UTR,extension
 do_ensembl_organism(
@@ -74,7 +77,8 @@ do_pipeline(
     out_path="demo_banquet", 
     counts_files="demo_counts", 
     peak_info_file="demo_polyA_peaks.gff", 
-    organism="mouse_ens94")
+    organism="mouse_ens94",
+    min_cell_present_vs_avg=0.5)
 
 # - Load results (individual objects are lazy-loaded when accessed)
 organism <- load_banquet("mouse_ens94")
@@ -91,6 +95,21 @@ sce <- load_peaks_counts_dir_into_sce("demo_counts/", "demo_polyA_peaks.gff", ".
 ```
 
 
+### BiocParallel
+
+polyApiper uses uses DelayedArray's default parallel processing as its own default, see `DelayedArray::getAutoBPPARAM()` and `DelayedArray::setAutoBPPARAM()`.
+
+Parallel processing is faster with a running worker pool. Otherwise, R will start up a new pool for each operation. To start up a worker pool:
+
+```
+BiocParallel::bpstart( DelayedArray::getAutoBPPARAM() )
+```
+
+If polyApiper hangs, you can try running it with serial processing:
+
+```
+DelayedArray::setAutoBPPARAM( BiocParallel::SerialParam() )
+```
 
 
 
