@@ -23,7 +23,7 @@
 #'     sweep
 #'
 #' @importFrom SingleCellExperiment 
-#'     SingleCellExperiment counts sizeFactors sizeFactors<-
+#'     SingleCellExperiment counts logcounts sizeFactors sizeFactors<- reducedDim
 #'
 #' @importFrom SummarizedExperiment
 #'     SummarizedExperiment assay assay<- rowData rowData<- rowRanges colData colData<-
