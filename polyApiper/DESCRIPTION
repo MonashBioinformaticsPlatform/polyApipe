@@ -14,6 +14,8 @@ Description: Produce and easily load a banquet of analysis.
 License: LGPL-2.1 | file LICENSE
 Encoding: UTF-8
 LazyData: true
+Depends:
+    SingleCellExperiment
 Imports: 
     methods,
     magrittr,

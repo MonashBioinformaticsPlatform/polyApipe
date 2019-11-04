@@ -63,6 +63,7 @@
 #' @importFrom shiny 
 #'      shinyApp fluidPage titlePanel tabPanel navlistPanel
 #'      selectizeInput updateSelectizeInput
+#'      h1 h2 h3
 #'
 NULL
 
