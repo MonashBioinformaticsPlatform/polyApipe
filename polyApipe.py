@@ -411,10 +411,8 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
                     if end2<start:
                         break              # Doesn't overlap
 
-                    if misprime==misprime2 and depth2>depth:
+                    if depth2>depth:
                         best = False       # Other one is better (deeper)
-                    elif misprime and not misprime2:
-                        best = False       # Other one is not misprimed
                     i2 -= 1
 
                 # Check if there is a better region downstream
@@ -424,10 +422,8 @@ def process_polyA_ends_to_peaks(polyA_bam, polyA_peaks_gff, depth_threshold, reg
                     if end<starts[i2]:
                         break              # Doesn't overlap
 
-                    if misprime==misprime2 and depth2>=depth:
+                    if depth2>=depth:
                         best = False       # Other one is better (deeper)
-                    elif misprime and not misprime2:
-                        best = False       # Other one is not misprimed
                     i2 += 1
 
                 # We're the best of the overlapping!
