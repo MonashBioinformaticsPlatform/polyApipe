@@ -4,8 +4,13 @@
 \alias{load_peaks_counts_dir_into_sce}
 \title{Load a directory of peak counts files into a SingleCellExperiment object}
 \usage{
-load_peaks_counts_dir_into_sce(counts_file_dir, peak_info_file, output,
-  batch_regex = "(.*)\\\\.tab\\\\.gz", ...)
+load_peaks_counts_dir_into_sce(
+  counts_file_dir,
+  peak_info_file,
+  output,
+  batch_regex = "(.*)\\\\.tab\\\\.gz",
+  ...
+)
 }
 \arguments{
 \item{counts_file_dir}{The directory full of counts files (in .tab.gz) 
@@ -57,7 +62,8 @@ sce <- load_peaks_counts_dir_into_sce("data/MyExperimentFullRun20190516_counts/"
 
 }
 \seealso{
-Other peak counts loading functions: \code{\link{load_peaks_counts_files_into_sce}},
-  \code{\link{load_peaks_counts_into_sce}}
+Other peak counts loading functions: 
+\code{\link{load_peaks_counts_files_into_sce}()},
+\code{\link{load_peaks_counts_into_sce}()}
 }
 \concept{peak counts loading functions}

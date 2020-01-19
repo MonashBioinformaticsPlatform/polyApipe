@@ -4,8 +4,14 @@
 \alias{load_peaks_counts_files_into_sce}
 \title{Load multiple peak counts files into a SingleCellExperiment object}
 \usage{
-load_peaks_counts_files_into_sce(counts_file_list, batch_names,
-  peak_info_file, output, replace = FALSE, ...)
+load_peaks_counts_files_into_sce(
+  counts_file_list,
+  batch_names,
+  peak_info_file,
+  output,
+  replace = FALSE,
+  ...
+)
 }
 \arguments{
 \item{counts_file_list}{A vector of tab-delimeted files of read counts per peak. 
@@ -44,7 +50,8 @@ sce <- load_peaks_counts_files_into_sce(c(counts_file1,counts_file2),
 
 }
 \seealso{
-Other peak counts loading functions: \code{\link{load_peaks_counts_dir_into_sce}},
-  \code{\link{load_peaks_counts_into_sce}}
+Other peak counts loading functions: 
+\code{\link{load_peaks_counts_dir_into_sce}()},
+\code{\link{load_peaks_counts_into_sce}()}
 }
 \concept{peak counts loading functions}

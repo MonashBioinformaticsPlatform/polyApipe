@@ -4,9 +4,17 @@
 \alias{load_peaks_counts_into_sce}
 \title{Load peak counts file into a SingleCellExperiment object}
 \usage{
-load_peaks_counts_into_sce(counts_file, peak_info_file, batch = "",
-  output, cell_prefix = batch, n_max = -1,
-  min_reads_per_barcode = 100, missing_peaks_are_zero = TRUE, ...)
+load_peaks_counts_into_sce(
+  counts_file,
+  peak_info_file,
+  batch = "",
+  output,
+  cell_prefix = batch,
+  n_max = -1,
+  min_reads_per_barcode = 100,
+  missing_peaks_are_zero = TRUE,
+  ...
+)
 }
 \arguments{
 \item{counts_file}{Tab-delimeted file of read counts per peak. 
@@ -69,7 +77,8 @@ sce <- loadHDF5SummarizedExperiment("knockout_rep1/")
 
 }
 \seealso{
-Other peak counts loading functions: \code{\link{load_peaks_counts_dir_into_sce}},
-  \code{\link{load_peaks_counts_files_into_sce}}
+Other peak counts loading functions: 
+\code{\link{load_peaks_counts_dir_into_sce}()},
+\code{\link{load_peaks_counts_files_into_sce}()}
 }
 \concept{peak counts loading functions}

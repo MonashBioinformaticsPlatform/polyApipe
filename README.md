@@ -60,7 +60,9 @@ polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
 ```
 library(polyApiper)
 
-# - Start a worker pool
+# - (Optional) Prevent BLAS from multi-threading, 
+#   and start up a BiocParallel worker pool
+RhpcBLASctl::blas_set_num_threads(1)
 BiocParallel::bpstart( DelayedArray::getAutoBPPARAM() )
 
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub

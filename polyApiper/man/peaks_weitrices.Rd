@@ -4,10 +4,17 @@
 \alias{peaks_weitrices}
 \title{Shifts and proportions weitrices from peak counts}
 \usage{
-peaks_weitrices(peaks_se, downsample = 1, remove_mispriming = TRUE,
-  utr_or_extension_only = FALSE, present_min_count = 1,
-  cells_to_use = NULL, min_cell_present_vs_avg = NULL,
-  min_peak_present = 0.05, do_computeSumFactors = TRUE)
+peaks_weitrices(
+  peaks_se,
+  downsample = 1,
+  remove_mispriming = TRUE,
+  utr_or_extension_only = FALSE,
+  present_min_count = 1,
+  cells_to_use = NULL,
+  min_cell_present_vs_avg = NULL,
+  min_peak_present = 0.05,
+  do_computeSumFactors = TRUE
+)
 }
 \description{
 Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.

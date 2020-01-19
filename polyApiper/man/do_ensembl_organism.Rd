@@ -4,8 +4,13 @@
 \alias{do_ensembl_organism}
 \title{Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub}
 \usage{
-do_ensembl_organism(out_path, species, version, hard_extension = 20,
-  extension = 2000)
+do_ensembl_organism(
+  out_path,
+  species,
+  version,
+  hard_extension = 20,
+  extension = 2000
+)
 }
 \description{
 Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub

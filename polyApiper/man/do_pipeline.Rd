@@ -4,14 +4,26 @@
 \alias{do_pipeline}
 \title{Analyse the output of polyApipe.py}
 \usage{
-do_pipeline(out_path, counts_files = NULL, batch_names = "",
-  counts_file_dir = NULL, peak_info_file, organism, downsample = 1,
-  remove_mispriming = TRUE, utr_or_extension_only = FALSE,
-  present_min_count = 1, cells_to_use = NULL,
-  min_cell_present_vs_avg = NULL, min_peak_present = 0.01,
-  do_computeSumFactors = TRUE, p = 20, n_restarts = 5,
+do_pipeline(
+  out_path,
+  counts_files = NULL,
+  batch_names = "",
+  counts_file_dir = NULL,
+  peak_info_file,
+  organism,
+  downsample = 1,
+  remove_mispriming = TRUE,
+  utr_or_extension_only = FALSE,
+  present_min_count = 1,
+  cells_to_use = NULL,
+  min_cell_present_vs_avg = NULL,
+  min_peak_present = 0.01,
+  do_computeSumFactors = TRUE,
+  p = 20,
+  n_restarts = 5,
   title = "polyApiper pipeline run",
-  stages = 1:length(PIPELINE_STAGES))
+  stages = 1:length(PIPELINE_STAGES)
+)
 }
 \arguments{
 \item{out_path}{Output directory name.}

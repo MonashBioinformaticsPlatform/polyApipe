@@ -63,7 +63,11 @@
 #' @importFrom shiny 
 #'      shinyApp fluidPage titlePanel tabPanel navlistPanel
 #'      selectizeInput updateSelectizeInput
+#'      observeEvent
 #'      h1 h2 h3
+#'
+#' @importFrom DT
+#'      DTOutput renderDT dataTableProxy selectRows
 #'
 NULL
 

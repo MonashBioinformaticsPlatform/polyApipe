@@ -206,14 +206,12 @@ enrichment_wilcox <- function(stats, confident_sign, gene_sets, min_size=2, max_
 
 
 #' @export
-do_test <- function(out_dir, fit, coef, gene_sets=NULL, fdr=0.05, ...) {
-    organism <- load_banquet(organism)
-    
-    top <- limma_confects(fit, coef, full=TRUE, fdr=fdr)
+do_test <- function(out_dir, fit, coef, gene_sets=NULL, fdr=0.05, trend=FALSE, ...) {    
+    top <- limma_confects(fit, coef, full=TRUE, fdr=fdr, trend=trend)
 
     ensure_dir(out_dir)
     saveRDS(top, file.path(out_dir, "confects.rds"))
-    write_csv(top$table, file.path(out_dir, "confects.csv"))
+    write_csv(top$table[,-c(1,2)], file.path(out_dir, "confects.csv"))
     
     if (is.null(gene_sets))
         return()

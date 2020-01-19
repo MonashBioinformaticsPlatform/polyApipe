@@ -94,6 +94,12 @@ twod_plot <- function(x, y, value, weight=NULL, cluster, signed, value_label="",
 }
 
 
+prioritize_columns <- function(df, columns) {
+    reordering <- order(match(colnames(df), columns))
+    df[,reordering,drop=FALSE]
+}
+
+
 ui <- function(request) {
     gene_tab <- tabPanel(
         "Gene",
@@ -110,9 +116,14 @@ ui <- function(request) {
         fluidRow(
             column(6,plotOutput("peaks_1d"))))
 
+    test_tab <- tabPanel(
+        "Test",
+        selectizeInput("test", label="Test", choices="", width="100%"),
+        DTOutput("test_results"))
+        
     tabset <- navlistPanel(
-        widths=c(2,10), well=FALSE,
-        gene_tab)
+        widths=c(2,10), well=FALSE, id="navlist",
+        test_tab, gene_tab)
 
     ui <- fluidPage(
         titlePanel("polyApipe shiny app"),
@@ -123,7 +134,7 @@ ui <- function(request) {
 
 
 server <- 
-        function(gene_expr, shift, peak_expr, layout_1d, layout_2d, clusters) 
+        function(gene_expr, shift, peak_expr, layout_1d, layout_2d, clusters, test_dirs) 
         function(input, output, session) {    
 
     choices <- union(rownames(gene_expr), rownames(shift))
@@ -133,10 +144,55 @@ server <-
     
     stopifnot(identical(colnames(gene_expr), colnames(shift)))
     stopifnot(identical(colnames(gene_expr), colnames(peak_expr)))
-   
-    updateSelectizeInput(session, "gene", choices=c("Backspace then type"="",choices), server=T)
     
     
+    select_gene <- function(selected="") {
+        updateSelectizeInput(session, 
+            "gene", choices=c("Backspace then type"="",choices), selected=selected, server=T)
+    }
+    
+    select_gene()
+
+    # ==== Test ====
+    
+    if (length(test_dirs) > 0 && is.null(names(test_dirs)))
+        names(test_dirs) <- basename(test_dirs)
+    
+    updateSelectizeInput(session, "test", choices=test_dirs, server=F)
+
+    test_confects <- reactive({
+        req(input$test %in% test_dirs)
+        load_banquet(file.path(input$test, "confects.rds"))
+    })
+    
+    output$test_results <- renderDT(
+            options=list(pageLength=25),
+            selection="single",
+            rownames=FALSE, {
+        result <- test_confects()$table[,-2]
+        rownames(result) <- NULL
+        result <- prioritize_columns(
+            result,
+            c("rank","confect","effect","symbol","regions","biotype","name"))
+        result
+    })
+    
+    observeEvent(input$test_results_rows_selected, {
+        row <- input$test_results_rows_selected
+        req(length(row) == 1)
+        print("...")
+        print(input$test_results_rows_selected)
+        selectRows(dataTableProxy("test_results"), NULL)
+        
+        gene_to_show <- test_confects()$table$name[row]
+        print(gene_to_show)
+        select_gene(gene_to_show)
+        updateNavlistPanel(session, "navlist", "Gene")
+    })
+
+
+    # ==== Gene ====
+        
     output$expr_1d <- renderPlot({
         req(input$gene %in% rownames(gene_expr))
         expr <- logcounts(gene_expr)[input$gene,]
@@ -187,11 +243,12 @@ polyApipe_shiny <- function(
         peak_expr,        
         layout_1d=NULL,
         layout_2d=NULL,
-        clusters=NULL) {
+        clusters=NULL,
+        test_dirs=NULL) {
     shinyApp(
         ui, 
         server(gene_expr=gene_expr, shift=shift, peak_expr=peak_expr, 
-            layout_1d=layout_1d, layout_2d=layout_2d, clusters=clusters))
+            layout_1d=layout_1d, layout_2d=layout_2d, clusters=clusters, test_dirs=test_dirs))
 }
 
 
