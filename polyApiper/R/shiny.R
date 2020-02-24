@@ -119,6 +119,7 @@ ui <- function(request) {
     test_tab <- tabPanel(
         "Test",
         selectizeInput("test", label="Test", choices="", width="100%"),
+        uiOutput("test_desc"),
         DTOutput("test_results"))
         
     tabset <- navlistPanel(
@@ -163,6 +164,19 @@ server <-
     test_confects <- reactive({
         req(input$test %in% test_dirs)
         load_banquet(file.path(input$test, "confects.rds"))
+    })
+    
+    output$test_desc <- renderUI({
+        result <- test_confects()
+        
+        n <- nrow(result$table)
+        signif <- !is.na(result$table$confect)
+        n_signif <- sum(signif)
+        n_up <- sum(result$table$effect > 0 & signif)
+        n_down <- sum(result$table$effect < 0 & signif)
+        
+        p(sprintf("At FDR %g, %d of %d changed, %d positive, %d negative.", 
+            result$fdr, n_signif, n, n_up, n_down))
     })
     
     output$test_results <- renderDT(
