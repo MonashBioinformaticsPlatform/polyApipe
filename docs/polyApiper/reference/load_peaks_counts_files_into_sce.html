@@ -113,8 +113,14 @@ SingleCellExperiment for analysis. Each cell will be uniquely named,
 and colData will include the batch.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>load_peaks_counts_files_into_sce</span>(<span class='no'>counts_file_list</span>, <span class='no'>batch_names</span>,
-  <span class='no'>peak_info_file</span>, <span class='no'>output</span>, <span class='kw'>replace</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>load_peaks_counts_files_into_sce</span>(
+  <span class='no'>counts_file_list</span>,
+  <span class='no'>batch_names</span>,
+  <span class='no'>peak_info_file</span>,
+  <span class='no'>output</span>,
+  <span class='kw'>replace</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -151,8 +157,9 @@ e.g. n_max, min_reads_per_barcode (but not cell_prefix or missing_peaks_are_zero
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other peak counts loading functions: <code><a href='load_peaks_counts_dir_into_sce.html'>load_peaks_counts_dir_into_sce</a></code>,
-  <code><a href='load_peaks_counts_into_sce.html'>load_peaks_counts_into_sce</a></code></p></div>
+    <div class='dont-index'><p>Other peak counts loading functions: 
+<code><a href='load_peaks_counts_dir_into_sce.html'>load_peaks_counts_dir_into_sce</a>()</code>,
+<code><a href='load_peaks_counts_into_sce.html'>load_peaks_counts_into_sce</a>()</code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>

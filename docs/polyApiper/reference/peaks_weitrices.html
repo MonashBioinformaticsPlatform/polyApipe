@@ -109,10 +109,17 @@
     <p>Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>peaks_weitrices</span>(<span class='no'>peaks_se</span>, <span class='kw'>downsample</span> <span class='kw'>=</span> <span class='fl'>1</span>, <span class='kw'>remove_mispriming</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>utr_or_extension_only</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>present_min_count</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>min_cell_present_vs_avg</span> <span class='kw'>=</span> <span class='fl'>0.5</span>, <span class='kw'>min_peak_present</span> <span class='kw'>=</span> <span class='fl'>0.05</span>,
-  <span class='kw'>do_computeSumFactors</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+    <pre class="usage"><span class='fu'>peaks_weitrices</span>(
+  <span class='no'>peaks_se</span>,
+  <span class='kw'>downsample</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>remove_mispriming</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>utr_or_extension_only</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>present_min_count</span> <span class='kw'>=</span> <span class='fl'>1</span>,
+  <span class='kw'>cells_to_use</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>min_cell_present_vs_avg</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>min_peak_present</span> <span class='kw'>=</span> <span class='fl'>0.05</span>,
+  <span class='kw'>do_computeSumFactors</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)</pre>
 
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>

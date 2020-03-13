@@ -111,9 +111,17 @@ SingleCellExperiment for analysis." />
 SingleCellExperiment for analysis.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>load_peaks_counts_into_sce</span>(<span class='no'>counts_file</span>, <span class='no'>peak_info_file</span>, <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>""</span>,
-  <span class='no'>output</span>, <span class='kw'>cell_prefix</span> <span class='kw'>=</span> <span class='no'>batch</span>, <span class='kw'>n_max</span> <span class='kw'>=</span> -<span class='fl'>1</span>,
-  <span class='kw'>min_reads_per_barcode</span> <span class='kw'>=</span> <span class='fl'>100</span>, <span class='kw'>missing_peaks_are_zero</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>load_peaks_counts_into_sce</span>(
+  <span class='no'>counts_file</span>,
+  <span class='no'>peak_info_file</span>,
+  <span class='kw'>batch</span> <span class='kw'>=</span> <span class='st'>""</span>,
+  <span class='no'>output</span>,
+  <span class='kw'>cell_prefix</span> <span class='kw'>=</span> <span class='no'>batch</span>,
+  <span class='kw'>n_max</span> <span class='kw'>=</span> -<span class='fl'>1</span>,
+  <span class='kw'>min_reads_per_barcode</span> <span class='kw'>=</span> <span class='fl'>100</span>,
+  <span class='kw'>missing_peaks_are_zero</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -164,8 +172,9 @@ assume there was zero reads. Needed to combine multiple samples. (Default = TRUE
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>Other peak counts loading functions: <code><a href='load_peaks_counts_dir_into_sce.html'>load_peaks_counts_dir_into_sce</a></code>,
-  <code><a href='load_peaks_counts_files_into_sce.html'>load_peaks_counts_files_into_sce</a></code></p></div>
+    <div class='dont-index'><p>Other peak counts loading functions: 
+<code><a href='load_peaks_counts_dir_into_sce.html'>load_peaks_counts_dir_into_sce</a>()</code>,
+<code><a href='load_peaks_counts_files_into_sce.html'>load_peaks_counts_files_into_sce</a>()</code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
