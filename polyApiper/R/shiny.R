@@ -104,6 +104,10 @@ ui <- function(request) {
     gene_tab <- tabPanel(
         "Gene",
         selectizeInput("gene", label="Gene", choices=c("Backspace then type"=""), width="50%"),
+        radioButtons("count_scale", label="Counts shown as", choices=c(
+            "log2(normalized count + 1)",
+            "raw count"="raw count"
+        )),
         h2("Expression"),
         fluidRow(
             column(6,plotOutput("expr_1d")),
@@ -194,32 +198,43 @@ server <-
     observeEvent(input$test_results_rows_selected, {
         row <- input$test_results_rows_selected
         req(length(row) == 1)
-        print("...")
-        print(input$test_results_rows_selected)
         selectRows(dataTableProxy("test_results"), NULL)
         
         gene_to_show <- test_confects()$table$name[row]
-        print(gene_to_show)
         select_gene(gene_to_show)
         updateNavlistPanel(session, "navlist", "Gene")
     })
 
 
     # ==== Gene ====
+    
+    gene_mat <- reactive({
+        if (input$count_scale == "log2(normalized count + 1)")
+            logcounts(gene_expr)
+        else
+            counts(gene_expr)
+    })
+    
+    peak_mat <- reactive({
+        if (input$count_scale == "log2(normalized count + 1)")
+            logcounts(peak_expr)
+        else
+            counts(peak_expr)
+    })
         
     output$expr_1d <- renderPlot({
         req(input$gene %in% rownames(gene_expr))
-        expr <- logcounts(gene_expr)[input$gene,]
+        expr <- gene_mat()[input$gene,]
         oned_plot(layout_1d, expr, cluster=clusters,
-            value_label="log2 count")            
+            value_label=input$count_scale)            
     })
 
     output$expr_2d <- renderPlot({
         req(input$gene %in% rownames(gene_expr))
-        expr <- logcounts(gene_expr)[input$gene,]
+        expr <- gene_mat()[input$gene,]
         expr[expr==0] <- NA
         twod_plot(layout_2d[,1],layout_2d[,2], expr, cluster=clusters, signed=FALSE,
-            value_label="log2 count")            
+            value_label=input$count_scale)            
     })
 
     output$shift_1d <- renderPlot({
@@ -241,10 +256,9 @@ server <-
     output$peaks_1d <- renderPlot({
         peaks <- which(rowData(peak_expr)$gene_id == input$gene)
         req(peaks)
-        value <- logcounts(peak_expr)[peaks,,drop=F]
+        value <- peak_mat()[peaks,,drop=F]
         oned_facet_plot(layout_1d, value, cluster=clusters,
-            value_label="log2 count")            
-        
+            value_label=input$count_scale)            
     })
 }
 
