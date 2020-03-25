@@ -17,8 +17,8 @@ oned_plot <- function(x, value, weight=NULL, cluster, value_label="", weight_lab
         geom_label(aes(label=cluster), data=mid, show.legend=F) +
         scale_size_area(
             limits=c(0, max(weight)), max_size=log2(max(weight)+1), 
-            guide=if (show_weight) "legend" else FALSE) +
-        guides(color=FALSE, x=FALSE) +
+            guide=if (show_weight) "legend" else "none") +
+        guides(color="none", x="none") +
         scale_x_continuous(breaks=c()) +
         labs(x="",y="", title=value_label, size=weight_label)
 }
@@ -52,8 +52,8 @@ oned_facet_plot <- function(x, value, weight=NULL, cluster, value_label="", weig
         geom_label(aes(label=cluster), data=mid, show.legend=F) +
         scale_size_area(
             limits=c(0, max(weight)), max_size=log2(max(weight)+1), 
-            guide=if (show_weight) "legend" else FALSE) +
-        guides(color=FALSE, x=FALSE) +
+            guide=if (show_weight) "legend" else "none") +
+        guides(color="none", x="none") +
         scale_x_continuous(breaks=c()) +
         labs(x="",y="", title=value_label, size=weight_label)
 }
@@ -82,7 +82,7 @@ twod_plot <- function(x, y, value, weight=NULL, cluster, signed, value_label="",
         scale_y_continuous(breaks=c()) +
         scale_size_area(
             limits=c(0, max(weight)), max_size=log2(max(weight)+1), 
-            guide=if (show_weight) "legend" else FALSE) +
+            guide=if (show_weight) "legend" else "none") +
         labs(x="",y="",title=value_label,color=value_label,size=weight_label)
     
     if (signed)
