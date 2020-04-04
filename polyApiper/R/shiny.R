@@ -106,7 +106,8 @@ ui <- function(request) {
         selectizeInput("gene", label="Gene", choices=c("Backspace then type"=""), width="50%"),
         radioButtons("count_scale", label="Counts shown as", choices=c(
             "log2(normalized count + 1)",
-            "raw count"="raw count"
+            "sqrt(count)",
+            "raw count"
         )),
         h2("Expression"),
         fluidRow(
@@ -207,31 +208,37 @@ server <-
 
 
     # ==== Gene ====
+
     
-    gene_mat <- reactive({
+    gene_vec <- reactive({
         if (input$count_scale == "log2(normalized count + 1)")
-            logcounts(gene_expr)
+            logcounts(gene_expr)[input$gene,]
+        else if (input$count_scale == "sqrt(count)")
+            sqrt(counts(gene_expr)[input$gene,])
         else
-            counts(gene_expr)
+            counts(gene_expr)[input$gene,]
     })
+
+    peaks <- reactive( which(rowData(peak_expr)$gene_id == input$gene) )
     
     peak_mat <- reactive({
         if (input$count_scale == "log2(normalized count + 1)")
-            logcounts(peak_expr)
+            logcounts(peak_expr)[peaks(),,drop=F]
+        else if (input$count_scale == "sqrt(count)")
+            sqrt(counts(peak_expr)[peaks(),,drop=F])
         else
-            counts(peak_expr)
+            counts(peak_expr)[peaks(),,drop=F]
     })
         
     output$expr_1d <- renderPlot({
         req(input$gene %in% rownames(gene_expr))
-        expr <- gene_mat()[input$gene,]
-        oned_plot(layout_1d, expr, cluster=clusters,
+        oned_plot(layout_1d, gene_vec(), cluster=clusters,
             value_label=input$count_scale)            
     })
 
     output$expr_2d <- renderPlot({
         req(input$gene %in% rownames(gene_expr))
-        expr <- gene_mat()[input$gene,]
+        expr <- gene_vec()
         expr[expr==0] <- NA
         twod_plot(layout_2d[,1],layout_2d[,2], expr, cluster=clusters, signed=FALSE,
             value_label=input$count_scale)            
@@ -254,10 +261,8 @@ server <-
     })
     
     output$peaks_1d <- renderPlot({
-        peaks <- which(rowData(peak_expr)$gene_id == input$gene)
-        req(peaks)
-        value <- peak_mat()[peaks,,drop=F]
-        oned_facet_plot(layout_1d, value, cluster=clusters,
+        req(peaks())
+        oned_facet_plot(layout_1d, peak_mat(), cluster=clusters,
             value_label=input$count_scale)            
     })
 }
