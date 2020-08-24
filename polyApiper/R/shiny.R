@@ -24,7 +24,8 @@ oned_plot <- function(x, value, weight=NULL, cluster, value_label="", weight_lab
 }
 
 
-oned_facet_plot <- function(x, value, weight=NULL, cluster, value_label="", weight_label="") {
+oned_facet_plot <- function(x, value, weight=NULL, cluster, 
+        value_label="", weight_label="", scale_free=FALSE) {
     # value (and weight) should now be a matrices, rownames are used
     m <- nrow(value)
     n <- ncol(value)
@@ -46,7 +47,7 @@ oned_facet_plot <- function(x, value, weight=NULL, cluster, value_label="", weig
         summarize(x=mean(x),value=weighted.mean(value, weight))
 
     ggplot(df, aes(x=x, y=value, color=factor(cluster))) +
-        facet_grid(facet~.) +
+        facet_grid(facet~., scales=ifelse(scale_free,"free_y","fixed")) +
         geom_hline(yintercept=0) +
         geom_point(aes(size=weight)) +
         geom_label(aes(label=cluster), data=mid, show.legend=F) +

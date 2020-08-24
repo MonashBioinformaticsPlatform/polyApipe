@@ -8,7 +8,7 @@
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom magrittr %>%
 #' @importFrom tibble rownames_to_column
-#' @importFrom dplyr left_join distinct tibble
+#' @importFrom dplyr left_join distinct tibble row_number
 #' @importFrom purrr map map_lgl map_chr pmap_df
 #' @importFrom jsonlite read_json write_json
 #' @importFrom assertthat assert_that
