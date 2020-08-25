@@ -13,6 +13,7 @@ do_pipeline_report <- function(
     
     rmarkdown::render(
         system.file("rmd","pipeline_overview.Rmd", package="polyApiper"),
+        intermediates_dir=out_path,
         output_dir=out_path,
         output_file=file.path(out_path,"overview.html"),
         params=list(
