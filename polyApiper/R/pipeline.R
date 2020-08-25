@@ -199,7 +199,7 @@ se_counts_weitrix <- function(se, do_computeSumFactors=TRUE) {
     } else
         sizeFactors(se) <- colSums(assay(se,"counts"))
     
-    se <- normalize(se)
+    se <- logNormCounts(se)
 
     assay(se, "weights") <- matrix(1,nrow=nrow(se),ncol=ncol(se))
     result <- bless_weitrix(se, "logcounts", "weights")

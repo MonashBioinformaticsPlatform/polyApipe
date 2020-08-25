@@ -32,7 +32,7 @@
 #'     computeSumFactors
 #'
 #' @importFrom scater
-#'     normalize
+#'     logNormCounts
 #'
 #' @importFrom BiocGenerics
 #'     rowSums colSums rowMeans colMeans rbind cbind
