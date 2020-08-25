@@ -19,17 +19,18 @@ clear_dump_dir <- function(path) {
 #' @export
 working_in <- function(path, task) {
     ensure_dir(path)
-    dump_dir <- file.path(path, "__working__")
-    old_dump_dir <- getHDF5DumpDir()
-    old_realization <- getRealizationBackend()
-
-    setHDF5DumpDir(dump_dir)
-    setRealizationBackend("HDF5Array")
-    on.exit({
-        setRealizationBackend(old_realization)
-        setHDF5DumpDir(old_dump_dir)
-        clear_dump_dir(dump_dir)
-    })
+    
+#    dump_dir <- file.path(path, "__working__")
+#    old_dump_dir <- getHDF5DumpDir()
+#    old_realization <- getRealizationBackend()
+#
+#    setHDF5DumpDir(dump_dir)
+#    setRealizationBackend("HDF5Array")
+#    on.exit({
+#        setRealizationBackend(old_realization)
+#        setHDF5DumpDir(old_dump_dir)
+#        clear_dump_dir(dump_dir)
+#    })
 
     task
 }
