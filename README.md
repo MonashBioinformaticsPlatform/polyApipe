@@ -60,17 +60,27 @@ polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
 ```
 library(polyApiper)
 
+
 # - (Optional) Prevent BLAS from multi-threading, 
 #   and start up a BiocParallel worker pool
 RhpcBLASctl::blas_set_num_threads(1)
 BiocParallel::bpstart( DelayedArray::getAutoBPPARAM() )
 
+
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub
 # - Classify genomic regions into exon,intron,3'UTR,extension
 do_ensembl_organism(
-    out_path="mouse_ens94", 
+    out_path="mouse_ens100", 
     species="Mus musculus", 
-    version="94")
+    version="100")
+
+
+
+# Need to supply a set of cells to use.
+# Choose these using conventional scRNA-Seq cell filtering methods.
+# (Cell names should be obtained by "paste0"ing together the basename of 
+#  the counts file and the cell barcode)
+cells_to_use <- c("SRR6129051AAACCTGAGAGGGCTT", "SRR6129051AAACCTGCATACGCCG", ...)
 
 # - Load output from polyApipe.py
 # - Produce HDF5Array SingleCellExperiment objects containing counts
@@ -79,14 +89,28 @@ do_pipeline(
     out_path="demo_banquet", 
     counts_files="demo_counts", 
     peak_info_file="demo_polyA_peaks.gff", 
-    organism="mouse_ens94",
-    min_cell_present_vs_avg=0.5)
+    organism="mouse_ens100",
+    cells_to_use=cells_to_use)
+
 
 # - Load results (individual objects are lazy-loaded when accessed)
 organism <- load_banquet("mouse_ens94")
 banq <- load_banquet("demo_banquet")
 names(banq)
 ```
+
+
+### Finding the most recent available ENSEMBL annotation version
+
+To work out the available ENSEMBL versions, use this R code, substituting in the appropriate species:
+
+```
+library(AnnotationHub)
+ah <- AnnotationHub()
+subset(ah, rdataclass == "EnsDb" & species == "Homo sapiens")$title
+subset(ah, rdataclass == "EnsDb" & species == "Mus musculus")$title
+```
+
 
 ### Lower level processing in R
 
@@ -99,18 +123,18 @@ sce <- load_peaks_counts_dir_into_sce("demo_counts/", "demo_polyA_peaks.gff", ".
 
 ### BiocParallel
 
-polyApiper uses uses DelayedArray's default parallel processing as its own default, see `DelayedArray::getAutoBPPARAM()` and `DelayedArray::setAutoBPPARAM()`.
+polyApiper uses uses BiocParallel's default parallel processing as its own default, as returned by `BiocParallel::bpparam()`.
 
 Parallel processing is faster with a running worker pool. Otherwise, R will start up a new pool for each operation. To start up a worker pool:
 
 ```
-BiocParallel::bpstart( DelayedArray::getAutoBPPARAM() )
+BiocParallel::bpstart()
 ```
 
 If polyApiper hangs, you can try running it with serial processing:
 
 ```
-DelayedArray::setAutoBPPARAM( BiocParallel::SerialParam() )
+BiocParallel::register( BiocParallel::SerialParam() )
 ```
 
 

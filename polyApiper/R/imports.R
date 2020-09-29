@@ -19,7 +19,7 @@
 #'     setHDF5DumpDir getHDF5DumpDir
 #'
 #' @importFrom DelayedArray
-#'     getRealizationBackend setRealizationBackend rowsum getAutoBPPARAM realize
+#'     getRealizationBackend setRealizationBackend rowsum realize
 #'     sweep
 #'
 #' @importFrom SingleCellExperiment 

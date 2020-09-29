@@ -88,7 +88,7 @@ do_pipeline <- function(
         do_computeSumFactors=TRUE, 
         
         # finding components
-        p=20,
+        p=10,
         n_restarts=5,
         
         title="polyApiper pipeline run",
@@ -201,7 +201,10 @@ se_counts_weitrix <- function(se, do_computeSumFactors=TRUE) {
     
     se <- logNormCounts(se)
 
-    assay(se, "weights") <- matrix(1,nrow=nrow(se),ncol=ncol(se))
+    weights <- matrix(1,nrow=nrow(se),ncol=ncol(se))
+    rownames(weights) <- rownames(se)
+    colnames(weights) <- colnames(se)
+    assay(se, "weights") <- weights
     result <- bless_weitrix(se, "logcounts", "weights")
     
     rowData(result)$total_reads <- rowSums(assay(se,"counts"))

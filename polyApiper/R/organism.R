@@ -75,8 +75,15 @@ get_orgdb <- function(species) {
 
 
 get_regions <- function(db, hard_extension=20, extension=2000) {
-    hard_extend <- function(gr)
-        gr %>% anchor_5p() %>% mutate(width=width+hard_extension) %>% trim()
+    hard_extend <- function(gr) {
+        # mutate produces need-to-trim warning
+        suppressWarnings(
+            gr %>% 
+            anchor_5p() %>% 
+            mutate(width=width+hard_extension) %>%
+            trim()
+        )
+    }
 
     just_mcols <- function(gr)
         gr %>% mcols() %>% as.data.frame()

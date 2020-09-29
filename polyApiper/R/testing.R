@@ -165,7 +165,7 @@ enrichment_fgsea <- function(stats, confident_sign, gene_sets, min_size=10, max_
     iters <- max(1e5, length(pathways)*100)
     message(iters, " samples will be taken")
 
-    result <- fgsea(pathways, stats, iters, BPPARAM=getAutoBPPARAM())
+    result <- fgsea(pathways, stats, iters)
     
     result %>%
         select(pval,padj,NES,ES,size, term_name=pathway) %>%

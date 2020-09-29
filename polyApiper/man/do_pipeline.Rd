@@ -19,7 +19,7 @@ do_pipeline(
   min_cell_present_vs_avg = NULL,
   min_peak_present = 0.01,
   do_computeSumFactors = TRUE,
-  p = 20,
+  p = 10,
   n_restarts = 5,
   title = "polyApiper pipeline run",
   stages = 1:length(PIPELINE_STAGES)
