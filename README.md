@@ -61,12 +61,6 @@ polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
 library(polyApiper)
 
 
-# - (Optional) Prevent BLAS from multi-threading, 
-#   and start up a BiocParallel worker pool
-RhpcBLASctl::blas_set_num_threads(1)
-BiocParallel::bpstart( DelayedArray::getAutoBPPARAM() )
-
-
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub
 # - Classify genomic regions into exon,intron,3'UTR,extension
 do_ensembl_organism(
@@ -75,26 +69,31 @@ do_ensembl_organism(
     version="100")
 
 
+# You will need to supply a set of cells to use.
+# - Choose these using conventional scRNA-Seq cell filtering methods.
+# - Also provide a cell naming function that combines the batch name and barcode
+#   consistent with your existing cell naming.
 
-# Need to supply a set of cells to use.
-# Choose these using conventional scRNA-Seq cell filtering methods.
-# (Cell names should be obtained by "paste0"ing together the basename of 
-#  the counts file and the cell barcode)
-cells_to_use <- c("SRR6129051AAACCTGAGAGGGCTT", "SRR6129051AAACCTGCATACGCCG", ...)
+cells_to_use <- c("SRR6129051_AAACCTGAGAGGGCTT", "SRR6129051_AAACCTGCATACGCCG", ...)
 
+cell_name_func <- function(batch,barcode) paste0(batch,"_",barcode)
+
+
+# Run the R part of the pipeline
 # - Load output from polyApipe.py
 # - Produce HDF5Array SingleCellExperiment objects containing counts
 # - Perform further analysis steps
 do_pipeline(
     out_path="demo_banquet", 
-    counts_files="demo_counts", 
+    counts_file_dir="demo_counts", 
     peak_info_file="demo_polyA_peaks.gff", 
     organism="mouse_ens100",
-    cells_to_use=cells_to_use)
+    cells_to_use=cells_to_use,
+    cell_name_func=cell_name_func)
 
 
-# - Load results (individual objects are lazy-loaded when accessed)
-organism <- load_banquet("mouse_ens94")
+# Load results (individual objects are lazy-loaded when accessed)
+organism <- load_banquet("mouse_ens100")
 banq <- load_banquet("demo_banquet")
 names(banq)
 ```
@@ -125,13 +124,7 @@ sce <- load_peaks_counts_dir_into_sce("demo_counts/", "demo_polyA_peaks.gff", ".
 
 polyApiper uses uses BiocParallel's default parallel processing as its own default, as returned by `BiocParallel::bpparam()`.
 
-Parallel processing is faster with a running worker pool. Otherwise, R will start up a new pool for each operation. To start up a worker pool:
-
-```
-BiocParallel::bpstart()
-```
-
-If polyApiper hangs, you can try running it with serial processing:
+If polyApiper hangs or produces strange errors, you can try running it with serial processing:
 
 ```
 BiocParallel::register( BiocParallel::SerialParam() )

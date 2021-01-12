@@ -11,12 +11,9 @@
 #' Should not exist. This directory will be created.
 #' @param batch A name of the batch/sample. Important if multiple samples are 
 #' going to be combined.
-#' @param cell_prefix A name to be prefixed to each cell's name. 
-#' Important if multiple samples are going to be combined. (Default = batch)
+#' @param cell_name_func A function taking two arguments, the batch name and a vector of cell barcodes. Returns a vector of cell names. Defaults to just paste0-ing the batch and cell barcode together.
+#' @param cells_to_use A vector of cell names to use (should match the output of cell_name_func). NULL to retain all cells.
 #' @param n_max Only read the first *n_max* lines of counts table. (Default = -1 (all))
-#' @param min_reads_per_barcode Only keep cells with at least this many reads. (Default = 100)
-#' @param missing_peaks_are_zero If there's nothing for a peak in the counts_file, 
-#' assume there was zero reads. Needed to combine multiple samples. (Default = TRUE)
 #' @param ...  Extra options passed to saveHDF5SummarizedExperiment 
 #' 
 #' @examples  
@@ -26,11 +23,7 @@
 #' 
 #' sce <- load_peaks_counts_into_sce(counts_file    =counts_file1, 
 #'                                   peak_info_file = peak_info_file, 
-#'                                   output         = "demo", 
-#'                                   min_reads_per_barcode = 1) 
-#' 
-#' # NB: min_reads_per_barcode=1 needed for test datatset due to its small size
-#' #     use default (100) or something reasonable for real data!
+#'                                   output         = "demo") 
 #' 
 #' \dontrun{
 #' 
@@ -61,16 +54,19 @@
 #' @import GenomicRanges 
 #' 
 #' @export
-load_peaks_counts_into_sce <- function(counts_file, 
-                                                peak_info_file, 
-                                                batch="",
-                                                output,
-                                                cell_prefix   = batch,
-                                                n_max=-1,
-                                                min_reads_per_barcode  = 100,
-                                                missing_peaks_are_zero = TRUE,
-                                                ... ) {
+load_peaks_counts_into_sce <- function(
+      counts_file, 
+      peak_info_file, 
+      batch="",
+      output,
+      cell_name_func = function(batch, cell) paste0(batch, cell),
+      cells_to_use = NULL,
+      n_max=-1,
+      missing_peaks_are_zero = TRUE,
+      ... ) {
    
+   message("Loading ", counts_file)
+
    if (output == "" | output == "." | output == "./") {
       stop("Specify some output name to write the sce hdf data, with ",
            "'output' parameter. A directory will be created there.")
@@ -98,7 +94,7 @@ load_peaks_counts_into_sce <- function(counts_file,
    names(gr) <- gr$peak
    
    
-   # Not useing read_tsv because of compression.(segfault.) 
+   # Not using read_tsv because of compression.(segfault.) 
    # NB: https://github.com/tidyverse/readr/issues/610
    the_counts <- read.table(counts_file, sep="\t", header=TRUE, 
                             as.is=TRUE, 
@@ -106,15 +102,16 @@ load_peaks_counts_into_sce <- function(counts_file,
                             nrows=n_max)
    colnames(the_counts) <- c("peak","cell","count")
    
-   # cellprefix to make cell barcodes unique across multi-sample experiments.
-   # Batch can be long, but cell_prefix should be short (and unique)
-   # Default is batch though.
-   # Will also want the barcode (assuming cells named by uniq barcode) later
+   # cell_name_func to make cell barcodes unique across multi-sample experiments.
    cell_to_barcode        <- as.character(the_counts$cell)
-   names(cell_to_barcode) <- paste0(cell_prefix, the_counts$cell)
+   names(cell_to_barcode) <- cell_name_func(batch, the_counts$cell)
    the_counts$cell        <- factor(names(cell_to_barcode))
-   
-   
+
+   # Optionally only retain desired cells   
+   if (!is.null(cells_to_use)) {
+       the_counts <- the_counts[the_counts$cell %in% cells_to_use,]
+       the_counts$cell <- droplevels(the_counts$cell)
+   }
    
    # First construct the sparse matrix of all the counts
    counts_matrix <- Matrix::sparseMatrix(
@@ -123,21 +120,20 @@ load_peaks_counts_into_sce <- function(counts_file,
       x = as.integer(the_counts$count))
    colnames(counts_matrix) <- levels(the_counts$cell)
    rownames(counts_matrix) <- levels(the_counts$peak)   
+
+   message("Loaded ", nrow(counts_matrix), " x ", ncol(counts_matrix), " matrix of counts")
    
    # Assume that any gene not present has counts of 0, and match order.
    # (This is used to make consistant gene-list ses to merge later)
-   if (missing_peaks_are_zero) {
-      
-      full_peak_list  <- peak_info$peak 
-      absent_genes    <- full_peak_list[ ! full_peak_list %in% rownames(counts_matrix) ]
-      stopifnot( all(rownames(counts_matrix) %in% full_peak_list))
-      
-      counts_matrix.absent <- Matrix::Matrix(0, nrow=length(absent_genes), ncol=ncol(counts_matrix), sparse = TRUE)  
-      rownames(counts_matrix.absent) <- absent_genes
-      
-      counts_matrix <- rbind(counts_matrix, counts_matrix.absent)
-      counts_matrix <- counts_matrix[full_peak_list,]
-   }
+   full_peak_list  <- peak_info$peak 
+   absent_genes    <- full_peak_list[ ! full_peak_list %in% rownames(counts_matrix) ]
+   stopifnot( all(rownames(counts_matrix) %in% full_peak_list))
+   
+   counts_matrix.absent <- Matrix::Matrix(0, nrow=length(absent_genes), ncol=ncol(counts_matrix), sparse = TRUE)  
+   rownames(counts_matrix.absent) <- absent_genes
+   
+   counts_matrix <- rbind(counts_matrix, counts_matrix.absent)
+   counts_matrix <- counts_matrix[full_peak_list,]
    
    # cell data
    new_colData <- DataFrame(
@@ -151,14 +147,14 @@ load_peaks_counts_into_sce <- function(counts_file,
       colData   = new_colData,
       rowRanges = gr[rownames(counts_matrix),] )
    rm(counts_matrix)
-   
-   # Subset cells with enough reads (since most are rubbish barcodes.)
-   sce$total_reads <- DelayedMatrixStats::colSums2(counts(sce))
-   
-   
+      
    # Save it
-   sce <- saveHDF5SummarizedExperiment(sce[,sce$total_reads >= min_reads_per_barcode], 
-                                       output, ... ) 
+   # - As at Bioconductor 3.12, cbinding when loading multiple matrices 
+   #   does not work unless as.sparse=FALSE given here.
+   sce <- saveHDF5SummarizedExperiment(sce, 
+                                       output, 
+                                       as.sparse=FALSE,
+                                       ... ) 
   
    return(sce)
 }
@@ -191,9 +187,7 @@ load_peaks_counts_into_sce <- function(counts_file,
 #' sce <- load_peaks_counts_files_into_sce(c(counts_file1,counts_file2),
 #'                batch_names    = c("demo1","demo2"),
 #'                peak_info_file = peak_info_file,
-#'                output = "demo1and2",
-#'                min_reads_per_barcode=1  # Required for tiny demo data.
-#'                )
+#'                output = "demo1and2")
 #' 
 #' @family peak counts loading functions
 #' 
@@ -223,7 +217,6 @@ load_peaks_counts_files_into_sce <- function(
                        counts_file   = counts_file_list,
                        batch         = batch_names,   
                        output = outputs, 
-                       cell_prefix   = batch_names,
                        MoreArgs = list(
                           peak_info_file=peak_info_file,
                           missing_peaks_are_zero = TRUE,
@@ -295,11 +288,11 @@ load_peaks_counts_files_into_sce <- function(
 #'
 #' @export
 load_peaks_counts_dir_into_sce <- function(
-   counts_file_dir, 
-   peak_info_file,
-   output,
-   batch_regex = '(.*)\\.tab\\.gz',
-   ... ) {
+      counts_file_dir, 
+      peak_info_file,
+      output,
+      batch_regex = '(.*)\\.tab\\.gz',
+      ... ) {
    
    counts_file_list <- list.files(counts_file_dir)
    batch_names      <-  sub( batch_regex,'\\1', basename(counts_file_list))

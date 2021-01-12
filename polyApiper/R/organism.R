@@ -43,7 +43,7 @@ get_dna <- function(species, version) {
     ah <- ah[ ah$species == species ]
     pattern <- paste0(
         "^ftp://ftp\\.ensembl\\.org/pub/release-",version,
-        "/.*\\.dna\\.primary_assembly\\.fa\\.gz$")
+        "/.*\\.dna_sm\\..*\\.fa\\.gz$")
     ah <- ah[ grepl(pattern, ah$sourceurl) ]
 
     if (length(ah) == 0)
@@ -208,4 +208,9 @@ do_ensembl_organism <- function(
     invisible()
 }
 
-
+#' @export
+do_organism <- function(
+        out_path, genome, genes, hard_extension=20, extension=2000) {
+    
+    ensure_dir(out_path)
+}

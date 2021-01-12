@@ -26,13 +26,13 @@ library(weitrix)
 
 banq <- load_banquet(params$input)
 
-n_input_cells <- ncol(banq$raw_peak_counts)
+n_cells <- ncol(banq$raw_peak_counts)
 
 raw_row_data <- as.data.frame(rowData(banq$raw_peak_counts))
 raw_col_data <- as.data.frame(colData(banq$raw_peak_counts))
+raw_col_data$total_umis <- colSums(assay(banq$raw_peak_counts,"counts"))
 
 n_mispriming_peaks <- sum(raw_row_data$misprime)
-n_used_cells <- ncol(banq$gene_expr$weitrix)
 
 n_input_peaks <- nrow(banq$raw_peak_counts)
 n_used_peaks <- nrow(banq$peak_expr$weitrix)
@@ -43,10 +43,8 @@ n_apa_genes <- nrow(banq$shift$weitrix)
 
 `r strftime(Sys.time(),"%Y-%m-%d")`
 
-## Input
-
 <div style="font-size: 150%">
-`r n_input_cells` input cells.
+`r n_cells` cells used.
 
 `r n_input_peaks` peaks detected. `r n_mispriming_peaks` peaks regarded as mispriming.
 
@@ -65,9 +63,7 @@ raw_row_data %>%
 ## Used in analysis
 
 <div style="font-size: 150%">
-`r n_used_cells` cells included in analysis.
-
-Expression of `r n_used_genes` genes measured by aggregating `r n_used_peaks` peaks.
+After filtering steps, `r n_used_peaks` peaks in `r n_used_genes` genes.
 
 APA of `r n_apa_genes` genes measured using `r n_apa_peaks` peaks.
 </div>
@@ -76,13 +72,13 @@ APA of `r n_apa_genes` genes measured using `r n_apa_peaks` peaks.
 raw_col_data %>%
     rownames_to_column("rowname") %>% 
     mutate(used = rowname %in% colnames(banq$gene_expr$weitrix)) %>%
-    arrange(-total_reads) %>%
+    arrange(-total_umis) %>%
     rowid_to_column("rowid") %>%
     arrange(used) %>%
-    ggplot(aes(x=rowid, y=total_reads, color=used)) + 
+    ggplot(aes(x=rowid, y=total_umis)) + 
     geom_point() +
     scale_y_log10() +
-    labs(x="Cell (largest to smallest)", y="Total reads in peaks", color="Used")
+    labs(x="Cell (largest to smallest)", y="Total reads in peaks")
 ```
 
 ## Gene expression components of variation
@@ -98,11 +94,7 @@ components_seq_screeplot(banq$gene_expr$comp_seq)
 components_seq_screeplot(banq$shift$comp_seq)
 ```
 
-## Parameters and versions
-
-```{r}
-writeLines(banq$invocation)
-```
+## Versions
 
 ```{r}
 sessionInfo()

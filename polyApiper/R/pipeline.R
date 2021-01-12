@@ -26,17 +26,15 @@ PIPELINE_STAGES = c(
 #'
 #' @param out_path Output directory name.
 #'
-#' @param counts_files One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or \code{counts_file_dir} but not both.
+#' @param counts_file_dir A directory containing counts files. Batch names are taken from the basename of the count files without the .tab.gz suffix. Give either this argument or \code{counts_files} but not both.
 #'
-#' @param batch_names A vector of the batch/sample names, in same order as counts_files
+#' @param counts_files Alternative to counts_file_dir. One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or \code{counts_file_dir} but not both.
 #'
-#' @param counts_file_dir A directory containing counts files. Give either this argument or \code{counts_files} but not both.
+#' @param batch_names If using counts_files, give a vector of the batch/sample names, in same order as counts_files
 #'
 #' @param peak_info_file GTF formatted peak file as output from polyApipe.py.
 #'
 #' @param organism Organism directory, as created by \code{do_ensembl_organism}.
-#'
-#' @param downsample If less than 1, downsample cells to this proportion when creating weitrices.
 #'
 #' @param remove_mispriming Remove peaks considered to be mispriming peaks.
 #'
@@ -45,8 +43,6 @@ PIPELINE_STAGES = c(
 #' @param present_min_count A gene is considered present in a cell with this count.
 #'
 #' @param cells_to_use Character vector of cells to use.
-#'
-#' @param min_cell_present_vs_avg Applies only if "cells_to_use" isn't given. Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells. 0.5 would be a reasonable value, or 0.75 to be conservative.
 #'
 #' @param min_peak_present After filtering cells, a peak is retained if it is present in this proportion of cells.
 #' 
@@ -68,21 +64,21 @@ do_pipeline <- function(
         out_path,
         
         # Either:
+        counts_file_dir=NULL,
+        # Or:
         counts_files=NULL,
         batch_names="",
-        # Or:
-        counts_file_dir=NULL,
         
         peak_info_file,
         organism,
-        
+
+        cell_name_func=function(batch, cell) paste0(batch, cell),
+        cells_to_use=NULL,
+
         # peaks_weitrices options
-        downsample=1,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         present_min_count=1,
-        cells_to_use=NULL,
-        min_cell_present_vs_avg=NULL,
         min_peak_present=0.01,
         # log expression level options
         do_computeSumFactors=TRUE, 
@@ -124,6 +120,8 @@ do_pipeline <- function(
                 counts_file_dir=counts_file_dir,
                 peak_info_file=peak_info_file,
                 output=peak_counts,
+                cell_name_func=cell_name_func,
+                cells_to_use=cells_to_use,
                 replace=TRUE)
         } else {
             load_peaks_counts_files_into_sce(
@@ -131,6 +129,8 @@ do_pipeline <- function(
                 batch_names=batch_names,
                 peak_info_file=peak_info_file,
                 output=peak_counts,
+                cell_name_func=cell_name_func,
+                cells_to_use=cells_to_use,
                 replace=TRUE)
         }
     }
@@ -148,11 +148,9 @@ do_pipeline <- function(
     if ("weitrices" %in% stages) {
         message("-- 3/6 weitrices --")
         do_peaks_weitrices(out_path, peak_counts,
-            downsample=downsample,
             present_min_count=present_min_count,
             min_peak_present=min_peak_present,
             cells_to_use=cells_to_use,
-            min_cell_present_vs_avg=min_cell_present_vs_avg,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
             do_computeSumFactors=do_computeSumFactors)
@@ -229,8 +227,6 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #'
 #' Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.
 #'
-#' Cells with less than min_cell_count_vs_avg times the average cell count will be discarded.
-#'
 #' Peaks with less than an average of min_peak_count_avg counts will be discarded.
 #'
 #' Only genes with two or more peaks are included.
@@ -238,24 +234,15 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #' @export
 peaks_weitrices <- function(
         peaks_se,
-        downsample=1,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         present_min_count=1,
         cells_to_use=NULL,
-        min_cell_present_vs_avg=NULL,
         min_peak_present=0.05,
         # log expression level options
         do_computeSumFactors=TRUE) {
-    assert_that((!is.null(cells_to_use)) + (!is.null(min_cell_present_vs_avg)) == 1)
 
     peaks_se <- load_banquet(peaks_se)
-    
-    if (downsample < 1) {
-       message("Downsampling ", downsample, " from ", ncol(peaks_se), " cells")
-       subsample <- runif(ncol(peaks_se)) <= downsample
-       peaks_se <- peaks_se[, subsample]
-    }
 
     message(nrow(peaks_se), " peaks in ", ncol(peaks_se), " cells")
 
@@ -271,26 +258,9 @@ peaks_weitrices <- function(
 
     peaks_se_relevant <- peaks_se[keep,]
 
-    # Remove low count cells and peaks
-        
-    if (!is.null(cells_to_use)) {
-        good_cells <- cells_to_use[cells_to_use %in% colnames(peaks_se_relevant)]
-        assert_that(length(good_cells) >= 1)
-        
-    } else {
-        cell_present <- colSums(assay(peaks_se_relevant,"counts") >= present_min_count)
-        
-        # Iteratively trim to a good set of cells
-        good_cells <- rep(TRUE,length(cell_present))
-        this_n_good <- sum(good_cells)
-        repeat {
-            min_cell <- max(1, mean(cell_present[good_cells]) * min_cell_present_vs_avg)
-            good_cells <- cell_present >= min_cell
-            last_n_good <- this_n_good
-            this_n_good <- sum(good_cells)
-            if (this_n_good == last_n_good) break;
-        } 
-    }
+    # Remove unwanted cells and low count peaks
+    good_cells <- cells_to_use[cells_to_use %in% colnames(peaks_se_relevant)]
+    assert_that(length(good_cells) >= 1)
     
     peak_presence <- rowMeans(
         assay(peaks_se_relevant,"counts")[,good_cells,drop=F] 
