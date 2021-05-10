@@ -10,30 +10,42 @@ An example analysis is [here](https://bioinformatics.erc.monash.edu/home/sarah.w
 [This poster on polyApipe](https://doi.org/10.7490/f1000research.1117076.1) was presented at Oz Single Cell 2019.
 
 
-## Install
+## Install dependencies
 
-Install the Python 3 part, from the command line:
-
-```
-pip install --user git+https://github.com/MonashBioinformaticsPlatform/polyApipe
-```
-
-You many need to add the polyApipe.py script to your \$PATH e.g. `export PATH=$PATH:/home/myusername/.local/bin/`
-
-Then, install the required tools:
+polyApipe requires various tools:
 
  * [samtools](http://www.htslib.org/) - [cite](https://www.ncbi.nlm.nih.gov/pubmed/19505943)
  * [UMI-tools](https://github.com/CGATOxford/UMI-tools) - [cite](https://genome.cshlp.org/content/early/2017/01/18/gr.209601.116.abstract)
  * [featureCounts](http://subread.sourceforge.net/) (version 1.5.3 or above) from Subread package - [cite](https://www.ncbi.nlm.nih.gov/pubmed/24227677)
  * [pysam](https://github.com/pysam-developers/pysam) python module
 
-The quickest way is to use [conda](https://docs.conda.io/en/latest/). 
+The quickest way to install these is to use [conda](https://docs.conda.io/en/latest/). 
 After installing conda, the following will create a suitable environment, 
 which can be loaded with `conda activate`. Ensure it is python3.
 
 ``` 
 conda create -n polyApipe_env  --override-channels -c bioconda -c conda-forge -c anaconda umi_tools=1.0.0-0 pysam samtools subread 
 conda activate polyApipe_env 
+```
+
+The R part of polyApipe requires Bioconductor. In R:
+
+```
+install.packages("BiocManager")
+```
+
+## Install
+
+Download polyApipe:
+
+```
+git clone https://github.com/MonashBioinformaticsPlatform/polyApipe
+```
+
+Test that you can run the Python part:
+
+```
+polyApipe/polyApipe.py
 ```
 
 Install the R part in R:
@@ -44,18 +56,20 @@ BiocManager::install("MonashBioinformaticsPlatform/polyApipe/polyApiper")
 ```
 
 
-## polyApipe.py
+## polyApipe.py Python script
 
 
-Count reads in polyA regions with polyApipe.py script on a directory or bam file:
+Count reads in poly(A) regions with polyApipe.py script on a directory or bam file:
 
 ```
-polyApipe.py -i demo/ -o demo
-polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
+polyApipe/polyApipe.py -i demo/ -o demo
+polyApipe/polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
 ```
 
 
 ## polyApiper R package
+
+Process the output of `polyApipe.py` in R.
 
 ```
 library(polyApiper)
