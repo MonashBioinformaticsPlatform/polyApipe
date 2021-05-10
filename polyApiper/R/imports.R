@@ -34,6 +34,9 @@
 #' @importFrom scater
 #'     logNormCounts
 #'
+#' @importFrom scuttle
+#'     uniquifyFeatureNames
+#'
 #' @importFrom BiocGenerics
 #'     rowSums colSums rowMeans colMeans rbind cbind
 #'

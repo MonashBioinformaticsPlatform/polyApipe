@@ -44,9 +44,7 @@ peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", pa
 sce <- load_peaks_counts_files_into_sce(c(counts_file1,counts_file2),
                batch_names    = c("demo1","demo2"),
                peak_info_file = peak_info_file,
-               output = "demo1and2",
-               min_reads_per_barcode=1  # Required for tiny demo data.
-               )
+               output = "demo1and2")
 
 }
 \seealso{

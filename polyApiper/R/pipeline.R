@@ -11,8 +11,6 @@ PIPELINE_STAGES = c(
     "load",
     "assign",
     "weitrices",
-    "shift_comp",
-    "gene_expr_comp",
     "report"
 )
 
@@ -40,11 +38,9 @@ PIPELINE_STAGES = c(
 #'
 #' @param utr_or_extension_only Remove peaks in the 5'UTR, exons, or introns.
 #'
-#' @param present_min_count A gene is considered present in a cell with this count.
-#'
 #' @param cells_to_use Character vector of cells to use.
 #'
-#' @param min_peak_present After filtering cells, a peak is retained if it is present in this proportion of cells.
+#' @param peak_min_present A peak is retained if it is present in this number of cells.
 #' 
 #' @param do_computeSumFactors Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.
 #'
@@ -78,15 +74,10 @@ do_pipeline <- function(
         # peaks_weitrices options
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
-        present_min_count=1,
-        min_peak_present=0.01,
+        peak_min_present=50,
         # log expression level options
         do_computeSumFactors=TRUE, 
-        
-        # finding components
-        p=10,
-        n_restarts=5,
-        
+                
         title="polyApiper pipeline run",
                 
         stages=1:length(PIPELINE_STAGES)) {
@@ -111,7 +102,7 @@ do_pipeline <- function(
     peak_counts <- file.path(out_path, "raw_peak_counts")
 
     if ("load" %in% stages) {
-        message("-- 1/6 load --")
+        message("-- 1/4 load --")
     
         if (!is.null(counts_file_dir)) {
             assert_that(is.null(counts_files))
@@ -136,7 +127,7 @@ do_pipeline <- function(
     }
 
     if ("assign" %in% stages) {
-        message("-- 2/6 assign --")
+        message("-- 2/4 assign --")
         do_se_reassign(peak_counts, organism)
         
         write_gff3(
@@ -146,34 +137,17 @@ do_pipeline <- function(
     }
     
     if ("weitrices" %in% stages) {
-        message("-- 3/6 weitrices --")
+        message("-- 3/4 weitrices --")
         do_peaks_weitrices(out_path, peak_counts,
-            present_min_count=present_min_count,
-            min_peak_present=min_peak_present,
+            peak_min_present=peak_min_present,
             cells_to_use=cells_to_use,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
             do_computeSumFactors=do_computeSumFactors)
     }
-
-    if ("shift_comp" %in% stages) {
-        message("-- 4/6 shift_components --")
-        do_weitrix_components(
-            file.path(out_path, "shift"),
-            file.path(out_path, "shift","weitrix"),
-            design=~0, p=p, n_restarts=n_restarts)
-    }
-    
-    if ("gene_expr_comp" %in% stages) {
-        message("-- 5/6 expr_components --")
-        do_weitrix_components(
-            file.path(out_path, "gene_expr"),
-            file.path(out_path, "gene_expr","weitrix"),
-            p=p, n_restarts=n_restarts)
-    }
     
     if ("report" %in% stages) {
-        message("-- 6/6 report --")
+        message("-- 4/4 report --")
         do_pipeline_report(
             out_path,
             title=paste(title,"- overview"))
@@ -205,8 +179,8 @@ se_counts_weitrix <- function(se, do_computeSumFactors=TRUE) {
     assay(se, "weights") <- weights
     result <- bless_weitrix(se, "logcounts", "weights")
     
-    rowData(result)$total_reads <- rowSums(assay(se,"counts"))
-    metadata(result)$weitrix$trend_formula <- "~splines::ns(log(total_reads),3)"
+    rowData(result)$total_count <- rowSums(assay(se,"counts"))
+    colData(result)$total_count <- colSums(assay(se,"counts"))
     
     result
 }
@@ -236,9 +210,8 @@ peaks_weitrices <- function(
         peaks_se,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
-        present_min_count=1,
         cells_to_use=NULL,
-        min_peak_present=0.05,
+        peak_min_present=50,
         # log expression level options
         do_computeSumFactors=TRUE) {
 
@@ -262,10 +235,10 @@ peaks_weitrices <- function(
     good_cells <- cells_to_use[cells_to_use %in% colnames(peaks_se_relevant)]
     assert_that(length(good_cells) >= 1)
     
-    peak_presence <- rowMeans(
+    peak_presence <- rowSums(
         assay(peaks_se_relevant,"counts")[,good_cells,drop=F] 
-        >= present_min_count)
-    good_peaks <- peak_presence >= min_peak_present
+        > 0)
+    good_peaks <- peak_presence >= peak_min_present
     
     peaks_se_final <- peaks_se_relevant[good_peaks, good_cells]
     assay(peaks_se_final,"counts") <- realize(assay(peaks_se_final,"counts"))
@@ -277,30 +250,31 @@ peaks_weitrices <- function(
     rd <- rowRanges(peaks_se_final) %>%
         as.data.frame() %>%
         rownames_to_column("name") %>%
-        arrange(gene_id, seqnames, strand, ifelse(strand == "-", -start, end))
-    # Grouped gene_id
+        arrange(symbol_unique, seqnames, strand, ifelse(strand == "-", -start, end))
+    # Grouped symbol_unique
     # Leftovers grouped by chromosome, strand
     # Within this, by position on strand
     
     rd_with_gene <- rd %>%
-        filter(!is.na(gene_id))
+        filter(!is.na(symbol_unique))
     
     rd2 <- rd_with_gene %>%
-        group_by(gene_id) %>%
+        group_by(symbol_unique) %>%
         filter(length(name) >= 2) %>%
         ungroup()
 
     gene_info <- rd %>%
-        filter(!is.na(gene_id)) %>%
-        group_by(gene_id) %>%
+        filter(!is.na(symbol_unique)) %>%
+        group_by(symbol_unique) %>%
         summarize(
+            gene_id=amalgamate(gene_id),
             symbol=amalgamate(symbol),
             biotype=amalgamate(biotype),
             peaks=paste(name,collapse=":"),
-            regions=paste(region,collapse=":"))
+            regions=paste(region_grouped,collapse=":"))
 
     grouping <- rd2 %>%
-        select(group=gene_id, name=name, region=region)
+        select(group=symbol_unique, name=name)
 
     message(nrow(gene_info), " genes")
     message(length(unique(grouping$group)), " genes with two or more peaks")
@@ -309,12 +283,12 @@ peaks_weitrices <- function(
     
     gene_counts <- realize(rowsum(
         assay(peaks_se_final,"counts")[rd_with_gene$name,,drop=F], 
-        rd_with_gene$gene_id))
+        rd_with_gene$symbol_unique))
     
     result_gene <- SingleCellExperiment(list(counts=gene_counts))
     colData(result_gene) <- colData(peaks_se_final)
     rowData(result_gene) <- 
-        gene_info[match(rownames(result_gene), gene_info$gene_id),,drop=F]
+        gene_info[match(rownames(result_gene), gene_info$symbol_unique),,drop=F]
     
     message("Compute normalized, log transformed counts")
     result_gene <- se_counts_weitrix(result_gene, 
@@ -331,7 +305,8 @@ peaks_weitrices <- function(
     result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping)
 
     gene_info <-
-        gene_info[match(rownames(result_shift), gene_info$gene_id),,drop=F]
+        gene_info[match(rownames(result_shift), gene_info$symbol_unique),,drop=F]
+    rowData(result_shift)$gene_id <- gene_info$gene_id
     rowData(result_shift)$symbol <- gene_info$symbol
     rowData(result_shift)$regions <- gene_info$regions
     rowData(result_shift)$biotype <- gene_info$biotype
@@ -348,41 +323,21 @@ peaks_weitrices <- function(
 do_peaks_weitrices <- function(out_path, ...) working_in(out_path, {
     result <- peaks_weitrices(...)
     
-    ensure_dir(file.path(out_path, "shift"))
     saveHDF5SummarizedExperiment(
-        result$shift, file.path(out_path,"shift","weitrix"), replace=TRUE)
+        result$shift, file.path(out_path,"shift"), replace=TRUE)
 
-    ensure_dir(file.path(out_path, "prop"))
     saveHDF5SummarizedExperiment(
-        result$prop, file.path(out_path,"prop","weitrix"), replace=TRUE)
+        result$prop, file.path(out_path,"prop"), replace=TRUE)
 
-    ensure_dir(file.path(out_path, "peak_expr"))
     saveHDF5SummarizedExperiment(
-        result$peak, file.path(out_path,"peak_expr","weitrix"), replace=TRUE)
+        result$peak, file.path(out_path,"peak_expr"), replace=TRUE)
 
-    ensure_dir(file.path(out_path, "gene_expr"))
     saveHDF5SummarizedExperiment(
-        result$gene, file.path(out_path,"gene_expr","weitrix"), replace=TRUE)
+        result$gene, file.path(out_path,"gene_expr"), replace=TRUE)
 
     invisible()
 })
 
-
-#' @export
-do_weitrix_components <- function(out_path, weitrix, p=20, ...) working_in(out_path, {
-    weitrix <- load_banquet(weitrix)
-    
-    comp_seq <- weitrix_components_seq(weitrix, p=p, ...)
-    saveRDS(comp_seq, file.path(out_path,"comp_seq.rds"))
-
-    # This makes little sense with the new weight dogma
-    # Better to extrapolate a line backwards in scree plot
-    #rand_weitrix <- weitrix_randomize(weitrix)
-    #rand_comp <- weitrix_components(rand_weitrix, p=1, ...)
-    #saveRDS(rand_comp, file.path(out_path,"rand_comp.rds"))
-
-    invisible()
-})
 
 
 

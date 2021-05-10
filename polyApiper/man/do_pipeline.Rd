@@ -6,21 +6,17 @@
 \usage{
 do_pipeline(
   out_path,
+  counts_file_dir = NULL,
   counts_files = NULL,
   batch_names = "",
-  counts_file_dir = NULL,
   peak_info_file,
   organism,
-  downsample = 1,
+  cell_name_func = function(batch, cell) paste0(batch, cell),
+  cells_to_use = NULL,
   remove_mispriming = TRUE,
   utr_or_extension_only = FALSE,
-  present_min_count = 1,
-  cells_to_use = NULL,
-  min_cell_present_vs_avg = NULL,
-  min_peak_present = 0.01,
+  peak_min_present = 50,
   do_computeSumFactors = TRUE,
-  p = 10,
-  n_restarts = 5,
   title = "polyApiper pipeline run",
   stages = 1:length(PIPELINE_STAGES)
 )
@@ -28,39 +24,33 @@ do_pipeline(
 \arguments{
 \item{out_path}{Output directory name.}
 
-\item{counts_files}{One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or \code{counts_file_dir} but not both.}
+\item{counts_file_dir}{A directory containing counts files. Batch names are taken from the basename of the count files without the .tab.gz suffix. Give either this argument or \code{counts_files} but not both.}
 
-\item{batch_names}{A vector of the batch/sample names, in same order as counts_files}
+\item{counts_files}{Alternative to counts_file_dir. One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or \code{counts_file_dir} but not both.}
 
-\item{counts_file_dir}{A directory containing counts files. Give either this argument or \code{counts_files} but not both.}
+\item{batch_names}{If using counts_files, give a vector of the batch/sample names, in same order as counts_files}
 
 \item{peak_info_file}{GTF formatted peak file as output from polyApipe.py.}
 
 \item{organism}{Organism directory, as created by \code{do_ensembl_organism}.}
 
-\item{downsample}{If less than 1, downsample cells to this proportion when creating weitrices.}
+\item{cells_to_use}{Character vector of cells to use.}
 
 \item{remove_mispriming}{Remove peaks considered to be mispriming peaks.}
 
 \item{utr_or_extension_only}{Remove peaks in the 5'UTR, exons, or introns.}
 
-\item{present_min_count}{A gene is considered present in a cell with this count.}
-
-\item{cells_to_use}{Character vector of cells to use.}
-
-\item{min_cell_present_vs_avg}{Applies only if "cells_to_use" isn't given. Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells. 0.5 would be a reasonable value, or 0.75 to be conservative.}
-
-\item{min_peak_present}{After filtering cells, a peak is retained if it is present in this proportion of cells.}
+\item{peak_min_present}{A peak is retained if it is present in this number of cells.}
 
 \item{do_computeSumFactors}{Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.}
-
-\item{p}{Number of components to find.}
-
-\item{n_restarts}{Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.}
 
 \item{title}{Title to use in report.}
 
 \item{stages}{Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.}
+
+\item{p}{Number of components to find.}
+
+\item{n_restarts}{Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.}
 }
 \value{
 There is no return value. Results are placed in the \code{out_path} directory. They can be loaded using \code{load_banquet(out_path)}.

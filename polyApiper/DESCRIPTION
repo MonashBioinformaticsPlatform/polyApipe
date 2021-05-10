@@ -42,6 +42,7 @@ Imports:
     SingleCellExperiment,
     scran,
     scater,
+    scuttle,
     weitrix,
     topconfects,
     limma,

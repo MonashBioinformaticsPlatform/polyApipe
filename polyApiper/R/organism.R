@@ -74,7 +74,8 @@ get_orgdb <- function(species) {
 }
 
 
-get_regions <- function(db, hard_extension=20, extension=2000) {
+
+get_regions <- function(db, hard_extension=20, extension=2000, omit_biotypes=c()) {
     hard_extend <- function(gr) {
         # mutate produces need-to-trim warning
         suppressWarnings(
@@ -96,10 +97,10 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
         gr
     }
 
-    left_join_mcols <- function(left, right, by) {
+    inner_join_mcols <- function(left, right, by) {
         df <- just_mcols(left) %>%
             mutate(.row. = row_number()) %>%
-            left_join(just_mcols(right), by=by)
+            inner_join(just_mcols(right), by=by)
 
         result <- left[df$.row.,]
         mcols(result) <- dplyr::select(df, -.row.)
@@ -113,25 +114,37 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
 
     db_genes <- genes(db) %>%
         mutate(gene_strand = strand) %>%
-        plyranges::select(gene_id, symbol, biotype=gene_biotype, gene_strand)
+        plyranges::select(gene_id, symbol, biotype=gene_biotype, gene_strand) %>%
+        filter(!biotype %in% omit_biotypes) %>%
+        mutate(symbol_unique = uniquifyFeatureNames(gene_id, symbol))
 
     db_trans <- transcriptsBy(db) %>%
         delist("gene_id") %>%
         mutate(support=ifelse(is.na(tx_support_level),6,tx_support_level) +
                    10*(tx_biotype!="protein_coding")) %>%
         select(gene_id, tx_id, support) %>%
-        left_join_mcols(db_genes, "gene_id") %>%
+        inner_join_mcols(db_genes, "gene_id") %>%
         filter(strand == gene_strand) %>% #Forbid antisense isoforms
-        select(tx_id, gene_id, symbol, biotype, support)
+        select(tx_id, gene_id, symbol, symbol_unique, biotype, support)
+
+    db_cds <- cdsBy(db) %>%
+        delist("tx_id") %>%
+        plyranges::select(tx_id) %>%
+        inner_join_mcols(db_trans, "tx_id")
+
+    db_utr5s <- fiveUTRsByTranscript(db) %>%
+        delist("tx_id") %>%
+        plyranges::select(tx_id) %>%
+        inner_join_mcols(db_trans, "tx_id")
 
     db_utr3s <- threeUTRsByTranscript(db) %>%
         delist("tx_id") %>%
         plyranges::select(tx_id) %>%
-        left_join_mcols(db_trans, "tx_id")
+        inner_join_mcols(db_trans, "tx_id")
 
     db_exons <- exonsBy(db) %>% delist("tx_id") %>%
         plyranges::select(tx_id) %>%
-        left_join_mcols(db_trans, "tx_id")
+        inner_join_mcols(db_trans, "tx_id")
 
     db_gaps <- setdiff_ranges_directed(seq_stranded_ranges, db_trans)
 
@@ -141,12 +154,13 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
         mutate(width=pmin(width, extension))
 
 
-
     everything <- bind_ranges(
         mutate(db_utr3s, region="3'UTR") %>% hard_extend,
-        mutate(db_exons, region="exon", support=support+100) %>% hard_extend,
-        mutate(db_trans, region="intron", support=support+200),
-        mutate(db_extensions, region="extension", support=support+300))
+        mutate(db_cds, region="CDS", support=support+100) %>% hard_extend,
+        mutate(db_utr5s, region="5'UTR", support=support+200) %>% hard_extend,
+        mutate(db_exons, region="exon", support=support+300) %>% hard_extend,
+        mutate(db_trans, region="intron", support=support+400),
+        mutate(db_extensions, region="extension", support=support+500))
 
     disjoinment <- disjoin_ranges_directed(everything)
     disjoinment$id <- seq_len(length(disjoinment))
@@ -157,7 +171,10 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
         group_by(id) %>%
         filter(support == min(support)) %>%
         ungroup() %>%
-        distinct(id, region, symbol, gene_id, biotype) %>%
+        group_by(id, region, symbol, symbol_unique, gene_id, biotype) %>%
+        summarize(
+            tx_id=paste(tx_id,collapse=" "),
+            .groups="drop") %>%
         group_by(id) %>%
         mutate(good=length(id)==1) %>% # n() not working for some reason
         ungroup()
@@ -166,7 +183,7 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
     good_ranges <- disjoinment[good$id,]
     mcols(good_ranges) <- select(good, -id, -good)
 
-    colors <- c("3'UTR"="#008800", "exon"="#000088", "intron"="#888888", "extension"="#880000")
+    colors <- c("3'UTR"="#008800", "5'UTR"="#888800", "CDS"="#008888", "exon"="#000088", "intron"="#888888", "extension"="#880000")
     mcols(good_ranges)$color <- colors[good_ranges$region]
 
     #Fails:
@@ -190,7 +207,8 @@ get_regions <- function(db, hard_extension=20, extension=2000) {
 #'
 #' @export
 do_ensembl_organism <- function(
-       out_path, species, version, hard_extension=20, extension=2000) {
+       out_path, species, version, 
+       hard_extension=20, extension=2000, omit_biotypes=c()) {
     db_ahid <- get_ensdb(species, version)
     dna_ahid <- get_dna(species, version)
     orgdb_ahid <- get_orgdb(species)
@@ -201,7 +219,7 @@ do_ensembl_organism <- function(
     write_json(config, file.path(out_path, "config.json"), auto_unbox=TRUE)
 
     result <- get_regions(get_ah(db_ahid),
-        hard_extension=hard_extension, extension=extension)
+        hard_extension=hard_extension, extension=extension, omit_biotypes=omit_biotypes)
     write_gff3(result$regions, file.path(out_path,"regions.gff3"), index=TRUE)
     write_gff3(result$bad, file.path(out_path,"bad.gff3"), index=TRUE)
 

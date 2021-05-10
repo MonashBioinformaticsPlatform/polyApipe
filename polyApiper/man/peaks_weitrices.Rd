@@ -6,13 +6,11 @@
 \usage{
 peaks_weitrices(
   peaks_se,
-  downsample = 1,
   remove_mispriming = TRUE,
   utr_or_extension_only = FALSE,
   present_min_count = 1,
   cells_to_use = NULL,
-  min_cell_present_vs_avg = NULL,
-  min_peak_present = 0.05,
+  peak_min_present = 50,
   do_computeSumFactors = TRUE
 )
 }
@@ -20,8 +18,6 @@ peaks_weitrices(
 Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.
 }
 \details{
-Cells with less than min_cell_count_vs_avg times the average cell count will be discarded.
-
 Peaks with less than an average of min_peak_count_avg counts will be discarded.
 
 Only genes with two or more peaks are included.

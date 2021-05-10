@@ -9,9 +9,9 @@ load_peaks_counts_into_sce(
   peak_info_file,
   batch = "",
   output,
-  cell_prefix = batch,
+  cell_name_func = function(batch, cell) paste0(batch, cell),
+  cells_to_use = NULL,
   n_max = -1,
-  min_reads_per_barcode = 100,
   missing_peaks_are_zero = TRUE,
   ...
 )
@@ -29,15 +29,11 @@ going to be combined.}
 \item{output}{Where to save the sce object on disk using ssaveHDF5SummarizedExperiment.
 Should not exist. This directory will be created.}
 
-\item{cell_prefix}{A name to be prefixed to each cell's name. 
-Important if multiple samples are going to be combined. (Default = batch)}
+\item{cell_name_func}{A function taking two arguments, the batch name and a vector of cell barcodes. Returns a vector of cell names. Defaults to just paste0-ing the batch and cell barcode together.}
+
+\item{cells_to_use}{A vector of cell names to use (should match the output of cell_name_func). NULL to retain all cells.}
 
 \item{n_max}{Only read the first *n_max* lines of counts table. (Default = -1 (all))}
-
-\item{min_reads_per_barcode}{Only keep cells with at least this many reads. (Default = 100)}
-
-\item{missing_peaks_are_zero}{If there's nothing for a peak in the counts_file, 
-assume there was zero reads. Needed to combine multiple samples. (Default = TRUE)}
 
 \item{...}{Extra options passed to saveHDF5SummarizedExperiment}
 }
@@ -53,11 +49,7 @@ peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", pa
 
 sce <- load_peaks_counts_into_sce(counts_file    =counts_file1, 
                                   peak_info_file = peak_info_file, 
-                                  output         = "demo", 
-                                  min_reads_per_barcode = 1) 
-
-# NB: min_reads_per_barcode=1 needed for test datatset due to its small size
-#     use default (100) or something reasonable for real data!
+                                  output         = "demo") 
 
 \dontrun{
 

@@ -57,7 +57,7 @@ config_args.add_argument('--misprime_in',      dest='misprime_in',      type=int
                     help="Look for --misprime_A_count As in this many nucleotides at the end of a reaad alignment when labelling potential misprime")                     
 
                     
-config_args  = parser.add_argument_group('Bam tags', 'For specifiing umi, cell e.t.c')
+config_args  = parser.add_argument_group('Bam tags', 'For specifying umi, cell e.t.c')
 config_args.add_argument('--cell_barcode_tag', dest='corrected_cell_barcode_tag', type=str, default='CB',
                      help="Corrected (exact-match) cell barcode bam tag used in bam input.")
 config_args.add_argument('--umi_tag', dest='umi_tag', type=str, default='UR',
