@@ -3,7 +3,7 @@
 polyApipe is a pipeline for examining Alternative PolyAdenylation (APA) from 10X Genomics single-cell RNA Sequencing. It consists of a Python 3 part, `polyApipe.py` which performs peak calling and UMI counting, and and R part, `polyApiper`, which analyses the resultant UMI counts.
 
 * [GitHub repository](https://github.com/MonashBioinformaticsPlatform/polyApipe)
-* [polyApipe.py usage example and documentation](https://monashbioinformaticsplatform.github.io/polyApipe.html)
+* [polyApipe.py usage example and documentation](https://monashbioinformaticsplatform.github.io/polyApipe/polyApipe.html)
 * [R function documentation](https://monashbioinformaticsplatform.github.io/polyApipe/polyApiper/reference/index.html)
 
 <!-- An example analysis is [here](https://bioinformatics.erc.monash.edu/home/sarah.williams/projects/TraudeBeliharz_SingleCell3pEnds/polyApipe_doco.html) -->
