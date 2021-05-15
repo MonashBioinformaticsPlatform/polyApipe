@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -38,7 +42,6 @@
 <meta property="og:title" content="Analyse the output of polyApipe.py — do_pipeline" />
 <meta property="og:description" content="Analyse the output of polyApipe.py. The resulting directory can be loaded
 with load_banquet. An HTML report is also produced." />
-<meta name="twitter:card" content="summary" />
 
 
 
@@ -56,7 +59,7 @@ with load_banquet. An HTML report is also produced." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -78,7 +81,7 @@ with load_banquet. An HTML report is also produced." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -111,26 +114,22 @@ with load_banquet. An HTML report is also produced." />
 with <code>load_banquet</code>. An HTML report is also produced.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>do_pipeline</span>(
-  <span class='no'>out_path</span>,
-  <span class='kw'>counts_files</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>batch_names</span> <span class='kw'>=</span> <span class='st'>""</span>,
-  <span class='kw'>counts_file_dir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>peak_info_file</span>,
-  <span class='no'>organism</span>,
-  <span class='kw'>downsample</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>remove_mispriming</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>utr_or_extension_only</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>present_min_count</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-  <span class='kw'>cells_to_use</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>min_cell_present_vs_avg</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>min_peak_present</span> <span class='kw'>=</span> <span class='fl'>0.01</span>,
-  <span class='kw'>do_computeSumFactors</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>p</span> <span class='kw'>=</span> <span class='fl'>20</span>,
-  <span class='kw'>n_restarts</span> <span class='kw'>=</span> <span class='fl'>5</span>,
-  <span class='kw'>title</span> <span class='kw'>=</span> <span class='st'>"polyApiper pipeline run"</span>,
-  <span class='kw'>stages</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span>(<span class='no'>PIPELINE_STAGES</span>)
-)</pre>
+    <pre class="usage"><span class='fu'>do_pipeline</span><span class='op'>(</span>
+  <span class='va'>out_path</span>,
+  counts_file_dir <span class='op'>=</span> <span class='cn'>NULL</span>,
+  counts_files <span class='op'>=</span> <span class='cn'>NULL</span>,
+  batch_names <span class='op'>=</span> <span class='st'>""</span>,
+  <span class='va'>peak_info_file</span>,
+  <span class='va'>organism</span>,
+  cell_name_func <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>batch</span>, <span class='va'>cell</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span><span class='op'>(</span><span class='va'>batch</span>, <span class='va'>cell</span><span class='op'>)</span>,
+  cells_to_use <span class='op'>=</span> <span class='cn'>NULL</span>,
+  remove_mispriming <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  utr_or_extension_only <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  peak_min_present <span class='op'>=</span> <span class='fl'>50</span>,
+  do_computeSumFactors <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  title <span class='op'>=</span> <span class='st'>"polyApiper pipeline run"</span>,
+  stages <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>PIPELINE_STAGES</span><span class='op'>)</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -140,16 +139,16 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
       <td><p>Output directory name.</p></td>
     </tr>
     <tr>
+      <th>counts_file_dir</th>
+      <td><p>A directory containing counts files. Batch names are taken from the basename of the count files without the .tab.gz suffix. Give either this argument or <code>counts_files</code> but not both.</p></td>
+    </tr>
+    <tr>
       <th>counts_files</th>
-      <td><p>One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or <code>counts_file_dir</code> but not both.</p></td>
+      <td><p>Alternative to counts_file_dir. One or more filenames for .tab.gz files produced by polyApipe.py. Give either this argument or <code>counts_file_dir</code> but not both.</p></td>
     </tr>
     <tr>
       <th>batch_names</th>
-      <td><p>A vector of the batch/sample names, in same order as counts_files</p></td>
-    </tr>
-    <tr>
-      <th>counts_file_dir</th>
-      <td><p>A directory containing counts files. Give either this argument or <code>counts_files</code> but not both.</p></td>
+      <td><p>If using counts_files, give a vector of the batch/sample names, in same order as counts_files</p></td>
     </tr>
     <tr>
       <th>peak_info_file</th>
@@ -160,8 +159,8 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
       <td><p>Organism directory, as created by <code>do_ensembl_organism</code>.</p></td>
     </tr>
     <tr>
-      <th>downsample</th>
-      <td><p>If less than 1, downsample cells to this proportion when creating weitrices.</p></td>
+      <th>cells_to_use</th>
+      <td><p>Character vector of cells to use.</p></td>
     </tr>
     <tr>
       <th>remove_mispriming</th>
@@ -172,32 +171,12 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
       <td><p>Remove peaks in the 5'UTR, exons, or introns.</p></td>
     </tr>
     <tr>
-      <th>present_min_count</th>
-      <td><p>A gene is considered present in a cell with this count.</p></td>
-    </tr>
-    <tr>
-      <th>cells_to_use</th>
-      <td><p>Character vector of cells to use.</p></td>
-    </tr>
-    <tr>
-      <th>min_cell_present_vs_avg</th>
-      <td><p>Applies only if "cells_to_use" isn't given. Controls filtering of cells. Cells are retained if this proportion of the average number of present peaks are present. This is iterated, so the average is over the retained cells. 0.5 would be a reasonable value, or 0.75 to be conservative.</p></td>
-    </tr>
-    <tr>
-      <th>min_peak_present</th>
-      <td><p>After filtering cells, a peak is retained if it is present in this proportion of cells.</p></td>
+      <th>peak_min_present</th>
+      <td><p>A peak is retained if it is present in this number of cells.</p></td>
     </tr>
     <tr>
       <th>do_computeSumFactors</th>
       <td><p>Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.</p></td>
-    </tr>
-    <tr>
-      <th>p</th>
-      <td><p>Number of components to find.</p></td>
-    </tr>
-    <tr>
-      <th>n_restarts</th>
-      <td><p>Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.</p></td>
     </tr>
     <tr>
       <th>title</th>
@@ -206,6 +185,14 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
     <tr>
       <th>stages</th>
       <td><p>Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.</p></td>
+    </tr>
+    <tr>
+      <th>p</th>
+      <td><p>Number of components to find.</p></td>
+    </tr>
+    <tr>
+      <th>n_restarts</th>
+      <td><p>Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.</p></td>
     </tr>
     </table>
 
@@ -217,14 +204,10 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
     <p>You can choose to run only specific stages of the pipeline with the <code>stages</code> argument. See the global <code>PIPELINE_STAGES</code> for possible stages. <code>stages</code> is a character vector or an integer vector indexing into <code>PIPELINE_STAGES</code>.</p>
 
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
-      <li><a href="#details">Details</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -235,7 +218,7 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

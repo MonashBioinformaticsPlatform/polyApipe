@@ -6,7 +6,7 @@ output:
     theme: united
     toc: yes
     toc_depth: 5
-bibliography: /home/sarah.williams/data/mendeley/library.bib
+bibliography: library.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -45,7 +45,7 @@ data for loading into R as follows;
 4. **APA Analysis** 
 
 
-<!-- Todo: put polyApipe into its own conda? Yuck. -->
+<!-- Todo: put polyApipe into its own conda? -->
 
 
 

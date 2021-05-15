@@ -9,7 +9,8 @@ do_ensembl_organism(
   species,
   version,
   hard_extension = 20,
-  extension = 2000
+  extension = 2000,
+  omit_biotypes = c()
 )
 }
 \description{

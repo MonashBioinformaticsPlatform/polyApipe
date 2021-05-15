@@ -8,7 +8,6 @@ peaks_weitrices(
   peaks_se,
   remove_mispriming = TRUE,
   utr_or_extension_only = FALSE,
-  present_min_count = 1,
   cells_to_use = NULL,
   peak_min_present = 50,
   do_computeSumFactors = TRUE
