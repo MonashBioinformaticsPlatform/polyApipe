@@ -206,7 +206,8 @@ amalgamate <- function(vec) paste(unique(vec),collapse="/")
 #' Only genes with two or more peaks are included.
 #'
 #' @export
-peaks_weitrices <- function(
+do_peaks_weitrices <- function(
+        out_path,
         peaks_se,
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
@@ -293,16 +294,24 @@ peaks_weitrices <- function(
     message("Compute normalized, log transformed counts")
     result_gene <- se_counts_weitrix(result_gene, 
         do_computeSumFactors=do_computeSumFactors)
-    
+
+    saveHDF5SummarizedExperiment(
+        result_gene, file.path(out_path,"gene_expr"), replace=TRUE)
+    rm(result_gene)
+
     # Use rd ordering    
     result_peak <- se_counts_weitrix(peaks_se_final[rd$name,],
         do_computeSumFactors=do_computeSumFactors)
-    
+
+    saveHDF5SummarizedExperiment(
+        result_peak, file.path(out_path,"peak_expr"), replace=TRUE)
+    rm(result_peak)
+
+
     # Outputs based on two or more peaks
             
     message("Compute APA shifts and peak proportions")
     result_shift <- counts_shift(assay(peaks_se_final,"counts"), grouping)
-    result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping)
 
     gene_info <-
         gene_info[match(rownames(result_shift), gene_info$symbol_unique),,drop=F]
@@ -310,34 +319,22 @@ peaks_weitrices <- function(
     rowData(result_shift)$symbol <- gene_info$symbol
     rowData(result_shift)$regions <- gene_info$regions
     rowData(result_shift)$biotype <- gene_info$biotype
-
-    rowData(result_prop) <- rowData(peaks_se_final)[rownames(result_prop),]
-
     colData(result_shift) <- colData(peaks_se_final)
+
+    saveHDF5SummarizedExperiment(
+        result_shift, file.path(out_path,"shift"), replace=TRUE)
+    rm(result_shift)
+
+    result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping)
+    rowData(result_prop) <- rowData(peaks_se_final)[rownames(result_prop),]
     colData(result_prop) <- colData(peaks_se_final)
 
-    list(shift=result_shift, prop=result_prop, peak=result_peak, gene=result_gene)
+    saveHDF5SummarizedExperiment(
+        result_prop, file.path(out_path,"prop"), replace=TRUE)
+    rm(result_prop)
+
+    out_path
 }
-
-#' @export
-do_peaks_weitrices <- function(out_path, ...) working_in(out_path, {
-    result <- peaks_weitrices(...)
-    
-    saveHDF5SummarizedExperiment(
-        result$shift, file.path(out_path,"shift"), replace=TRUE)
-
-    saveHDF5SummarizedExperiment(
-        result$prop, file.path(out_path,"prop"), replace=TRUE)
-
-    saveHDF5SummarizedExperiment(
-        result$peak, file.path(out_path,"peak_expr"), replace=TRUE)
-
-    saveHDF5SummarizedExperiment(
-        result$gene, file.path(out_path,"gene_expr"), replace=TRUE)
-
-    invisible()
-})
-
 
 
 

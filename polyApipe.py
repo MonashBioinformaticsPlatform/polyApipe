@@ -38,7 +38,7 @@ main_args.add_argument('-o','--output',dest='out_root', type=str,required=True,
 	             help="Name root to use for output files.")
 
 config_args  = parser.add_argument_group('PolyA peak options', 'Set peak-level configs')
-config_args.add_argument('--depth_threshold', dest='depth_threshold', type=int, default=10,
+config_args.add_argument('--depth_threshold', dest='depth_threshold', type=int, default=1,
                     help="Need at least this many reads in a peak to call an APA site.")
 config_args.add_argument('--region_size', dest='region_size', type=int, default=250,
                     help="Size upstream of APA site to consider polyA reads.")
@@ -260,7 +260,7 @@ def process_bams_to_polyA_bam (input_bams, polyA_bam_root, minpolyA, minMAPQ, no
             polyA_bamfile_inds.append(polyA_bamfile_ind )
             make_only_polyA_bam(input_bam, polyA_bamfile_ind, minpolyA, minMAPQ, nonA_allowed)
             pysam.index(polyA_bamfile_ind)  # Samtools index (was indexed already :. arleady sorted.)
-            print("Got polyA reads from"+input_bam)
+            print("Got polyA reads from "+input_bam)
             
         # Now merge result.
         print(polyA_bam_file+" ".join(polyA_bamfile_inds))

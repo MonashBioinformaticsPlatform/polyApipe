@@ -87,7 +87,7 @@ tar -xzf pbmc8k_analysis.tar.gz
 This command will produces the input required for polyApiper.
 It takes some time (hours) to run.
 ```{sh eval=FALSE}
-./polyApipe.py  -i pbmc8k_possorted_genome_bam.bam -o pbmc8k -t 8 --depth_threshold 10
+./polyApipe.py  -i pbmc8k_possorted_genome_bam.bam -o pbmc8k -t 8
 ```
 
 There is only one sample in this experiment, so specifing the bam file with -i.
@@ -224,7 +224,7 @@ PolyA peak options:
 
   --depth_threshold DEPTH_THRESHOLD
                         Need at least this many reads in a peak to call an APA
-                        site. (default: 10)
+                        site. (default: 1)
   --region_size REGION_SIZE
                         Size upstream of APA site to consider polyA reads.
                         (default: 250)

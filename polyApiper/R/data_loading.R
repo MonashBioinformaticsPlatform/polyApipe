@@ -103,14 +103,18 @@ load_peaks_counts_into_sce <- function(
    colnames(the_counts) <- c("peak","cell","count")
    
    # cell_name_func to make cell barcodes unique across multi-sample experiments.
-   cell_to_barcode        <- as.character(the_counts$cell)
-   names(cell_to_barcode) <- cell_name_func(batch, the_counts$cell)
-   the_counts$cell        <- factor(names(cell_to_barcode))
+   #cell_to_barcode        <- as.character(the_counts$cell)
+   #names(cell_to_barcode) <- cell_name_func(batch, the_counts$cell)
+   #the_counts$cell        <- factor(names(cell_to_barcode))
+   cell_to_barcode <- levels(the_counts$cell)
+   names(cell_to_barcode) <- cell_name_func(batch, cell_to_barcode)
+   levels(the_counts$cell) <- names(cell_to_barcode)
 
    # Optionally only retain desired cells   
    if (!is.null(cells_to_use)) {
        the_counts <- the_counts[the_counts$cell %in% cells_to_use,]
        the_counts$cell <- droplevels(the_counts$cell)
+       the_counts$peak <- droplevels(the_counts$peak)
    }
    
    # First construct the sparse matrix of all the counts
