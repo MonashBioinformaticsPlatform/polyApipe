@@ -49,7 +49,7 @@ Test that you can run the Python part:
 polyApipe/polyApipe.py
 ```
 
-Install the R part in R:
+Install the R part in R. weitrix development happens in step with polyApipe, so install it from git as well.
 
 ```
 BiocManager::install("pfh/weitrix")

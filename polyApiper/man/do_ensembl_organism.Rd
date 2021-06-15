@@ -10,6 +10,7 @@ do_ensembl_organism(
   version,
   hard_extension = 20,
   extension = 2000,
+  unstranded_gaps = TRUE,
   omit_biotypes = c()
 )
 }

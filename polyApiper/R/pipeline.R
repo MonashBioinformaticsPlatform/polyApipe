@@ -42,6 +42,8 @@ PIPELINE_STAGES = c(
 #'
 #' @param peak_min_present A peak is retained if it is present in this number of cells.
 #' 
+#' @param peak_min_prop A peak is used for APA and gene expression calculations only if it constitutes at least this proportion of total UMIs for the gene.
+#'
 #' @param do_computeSumFactors Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.
 #'
 #' @param p Number of components to find.
@@ -75,6 +77,7 @@ do_pipeline <- function(
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
         peak_min_present=50,
+        peak_min_prop=0.01,
         # log expression level options
         do_computeSumFactors=TRUE, 
                 
@@ -140,6 +143,7 @@ do_pipeline <- function(
         message("-- 3/4 weitrices --")
         do_peaks_weitrices(out_path, peak_counts,
             peak_min_present=peak_min_present,
+            peak_min_prop=peak_min_prop,
             cells_to_use=cells_to_use,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
@@ -161,15 +165,20 @@ do_pipeline <- function(
 
 
 #' @export
-se_counts_weitrix <- function(se, do_computeSumFactors=TRUE) {
+se_counts_weitrix <- function(se, size_factors=NULL, do_computeSumFactors=TRUE) {
     se <- load_banquet(se)
     
-    if (do_computeSumFactors) {
-        se <- computeSumFactors(se) 
-        #Could specify this, but it crashed when I tested it:
-        # BPPARAM=getAutoBPPARAM()
-    } else
-        sizeFactors(se) <- colSums(assay(se,"counts"))
+    if (do_computeSumFactors && is.null(size_factors)) {
+        message("Preclustering")
+        preclusters <- quickCluster(se, block=colData(se)$batch, block.BPPARAM=bpparam())
+        message(length(unique(preclusters)), " preclusters")
+        colData(se)$preclusters <- preclusters
+        se <- computeSumFactors(se, cluster=preclusters, BPPARAM=bpparam())
+    } else {
+        if (is.null(size_factors))
+            size_factors <- colSums(assay(se,"counts")) 
+        sizeFactors(se) <- size_factors
+    }
     
     se <- logNormCounts(se)
 
@@ -184,15 +193,6 @@ se_counts_weitrix <- function(se, do_computeSumFactors=TRUE) {
     
     result
 }
-
-
-#' @export
-do_se_counts_weitrix <- function(out_path, ...) working_in(out_path, {
-    result <- se_counts_weitrix(...)
-
-    saveHDF5SummarizedExperiment(result, file.path(out_path,"weitrix"), replace=TRUE)
-    invisible()
-})
 
 
 amalgamate <- function(vec) paste(unique(vec),collapse="/")
@@ -213,6 +213,7 @@ do_peaks_weitrices <- function(
         utr_or_extension_only=FALSE,
         cells_to_use=NULL,
         peak_min_present=50,
+        peak_min_prop=0.01,
         # log expression level options
         do_computeSumFactors=TRUE) {
 
@@ -242,7 +243,9 @@ do_peaks_weitrices <- function(
     good_peaks <- peak_presence >= peak_min_present
     
     peaks_se_final <- peaks_se_relevant[good_peaks, good_cells]
-    assay(peaks_se_final,"counts") <- realize(assay(peaks_se_final,"counts"))
+    # May be faster, but potentially uses lots of memory.
+    #assay(peaks_se_final,"counts") <- realize(assay(peaks_se_final,"counts"))
+    rowData(peaks_se_final)$total_count <- rowSums(assay(peaks_se_final,"counts"))
 
     message("Kept ", nrow(peaks_se_final), " peaks in ", ncol(peaks_se_final), " cells")
 
@@ -255,17 +258,23 @@ do_peaks_weitrices <- function(
     # Grouped symbol_unique
     # Leftovers grouped by chromosome, strand
     # Within this, by position on strand
-    
+
+    # Apply min_prop filter
     rd_with_gene <- rd %>%
-        filter(!is.na(symbol_unique))
+        filter(!is.na(symbol_unique)) %>%
+        group_by(symbol_unique) %>%
+        filter( total_count >= sum(total_count)*peak_min_prop ) %>%
+        ungroup()
     
+    rowData(peaks_se_final)$passed_min_prop <- rownames(peaks_se_final) %in% rd_with_gene$name
+
+    # Genes to use for APA shift    
     rd2 <- rd_with_gene %>%
         group_by(symbol_unique) %>%
         filter(length(name) >= 2) %>%
         ungroup()
 
-    gene_info <- rd %>%
-        filter(!is.na(symbol_unique)) %>%
+    gene_info <- rd_with_gene %>%
         group_by(symbol_unique) %>%
         summarize(
             gene_id=amalgamate(gene_id),
@@ -282,9 +291,9 @@ do_peaks_weitrices <- function(
     
     # Outputs based on one or more peaks
     
-    gene_counts <- realize(rowsum(
+    gene_counts <- rowsum(
         assay(peaks_se_final,"counts")[rd_with_gene$name,,drop=F], 
-        rd_with_gene$symbol_unique))
+        rd_with_gene$symbol_unique)
     
     result_gene <- SingleCellExperiment(list(counts=gene_counts))
     colData(result_gene) <- colData(peaks_se_final)
@@ -297,11 +306,12 @@ do_peaks_weitrices <- function(
 
     saveHDF5SummarizedExperiment(
         result_gene, file.path(out_path,"gene_expr"), replace=TRUE)
+    gene_size_factors <- sizeFactors(result_gene)
     rm(result_gene)
 
     # Use rd ordering    
     result_peak <- se_counts_weitrix(peaks_se_final[rd$name,],
-        do_computeSumFactors=do_computeSumFactors)
+        size_factors=gene_size_factors, do_computeSumFactors=FALSE)
 
     saveHDF5SummarizedExperiment(
         result_peak, file.path(out_path,"peak_expr"), replace=TRUE)
@@ -311,7 +321,7 @@ do_peaks_weitrices <- function(
     # Outputs based on two or more peaks
             
     message("Compute APA shifts and peak proportions")
-    result_shift <- counts_shift(assay(peaks_se_final,"counts"), grouping)
+    result_shift <- counts_shift(assay(peaks_se_final,"counts"), grouping, typecast=Matrix)
 
     gene_info <-
         gene_info[match(rownames(result_shift), gene_info$symbol_unique),,drop=F]
@@ -325,7 +335,7 @@ do_peaks_weitrices <- function(
         result_shift, file.path(out_path,"shift"), replace=TRUE)
     rm(result_shift)
 
-    result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping)
+    result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping, typecast=Matrix)
     rowData(result_prop) <- rowData(peaks_se_final)[rownames(result_prop),]
     colData(result_prop) <- colData(peaks_se_final)
 

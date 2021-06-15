@@ -75,7 +75,7 @@ get_orgdb <- function(species) {
 
 
 
-get_regions <- function(db, hard_extension=20, extension=2000, omit_biotypes=c()) {
+get_regions <- function(db, hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c()) {
     hard_extend <- function(gr) {
         # mutate produces need-to-trim warning
         suppressWarnings(
@@ -147,6 +147,11 @@ get_regions <- function(db, hard_extension=20, extension=2000, omit_biotypes=c()
         inner_join_mcols(db_trans, "tx_id")
 
     db_gaps <- setdiff_ranges_directed(seq_stranded_ranges, db_trans)
+    if (unstranded_gaps) {
+        db_trans_flip <- db_trans
+        strand(db_trans_flip) <- ifelse(strand(db_trans_flip)=="+","-","+")
+        db_gaps <- setdiff_ranges_directed(db_gaps, db_trans_flip)
+    }
 
     db_extensions <- db_gaps %>%
         join_overlap_inner_directed(flank_downstream(db_trans,1)) %>%
@@ -208,7 +213,7 @@ get_regions <- function(db, hard_extension=20, extension=2000, omit_biotypes=c()
 #' @export
 do_ensembl_organism <- function(
        out_path, species, version, 
-       hard_extension=20, extension=2000, omit_biotypes=c()) {
+       hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c()) {
     db_ahid <- get_ensdb(species, version)
     dna_ahid <- get_dna(species, version)
     orgdb_ahid <- get_orgdb(species)
@@ -219,16 +224,10 @@ do_ensembl_organism <- function(
     write_json(config, file.path(out_path, "config.json"), auto_unbox=TRUE)
 
     result <- get_regions(get_ah(db_ahid),
-        hard_extension=hard_extension, extension=extension, omit_biotypes=omit_biotypes)
+        hard_extension=hard_extension, extension=extension, 
+        unstranded_gaps=unstranded_gaps, omit_biotypes=omit_biotypes)
     write_gff3(result$regions, file.path(out_path,"regions.gff3"), index=TRUE)
     write_gff3(result$bad, file.path(out_path,"bad.gff3"), index=TRUE)
 
     invisible()
-}
-
-#' @export
-do_organism <- function(
-        out_path, genome, genes, hard_extension=20, extension=2000) {
-    
-    ensure_dir(out_path)
 }

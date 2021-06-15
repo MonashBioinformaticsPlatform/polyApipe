@@ -13,6 +13,8 @@
 #' @importFrom jsonlite read_json write_json
 #' @importFrom assertthat assert_that
 #'
+#' @importFrom BiocParallel bpparam
+#'
 #' @importFrom HDF5Array
 #'     loadHDF5SummarizedExperiment saveHDF5SummarizedExperiment
 #'     quickResaveHDF5SummarizedExperiment
@@ -21,6 +23,9 @@
 #' @importFrom DelayedArray
 #'     getRealizationBackend setRealizationBackend rowsum realize
 #'     sweep
+#'
+#' @importFrom Matrix
+#'     Matrix
 #'
 #' @importFrom SingleCellExperiment 
 #'     SingleCellExperiment counts logcounts sizeFactors sizeFactors<- reducedDim

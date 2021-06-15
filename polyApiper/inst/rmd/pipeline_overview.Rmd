@@ -78,7 +78,7 @@ raw_col_data %>%
     ggplot(aes(x=rowid, y=total_umis)) + 
     geom_point() +
     scale_y_log10() +
-    labs(x="Cell (largest to smallest)", y="Total reads in peaks")
+    labs(x="Cell (largest to smallest)", y="Total UMIs in peaks")
 ```
 
 ## Versions
