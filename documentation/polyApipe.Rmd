@@ -70,9 +70,10 @@ pipeline will work with default parameters.
 To obtain the data files for this analysis.
 
 ```{sh eval=FALSE}
-# Bam files and index. NB: large files.
+# Bam file and index. NB: large file (68GB).
 wget http://s3-us-west-2.amazonaws.com/10x.files/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_possorted_genome_bam.bam
 wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_possorted_genome_bam_index.bam.bai
+mv pbmc8k_possorted_genome_bam_index.bam.bai pbmc8k_possorted_genome_bam.bam.bai
 
 # Gzipped tar file with the precomputed tsne and clusters information
 wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_analysis.tar.gz
@@ -128,9 +129,9 @@ library(polyApiper)
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub
 # - Classify genomic regions into exon,intron,3'UTR,extension
 polyApiper:::do_ensembl_organism(
-    out_path="human_ens94", 
+    out_path="human_ens100", 
     species="Homo sapiens", 
-    version="94")
+    version="100")
 
 # - Load output from polyApipe.py
 # - Produce HDF5Array SingleCellExperiment objects containing counts
@@ -139,7 +140,7 @@ polyApiper:::do_pipeline(
     out_path      ="pbmc8k_banquet", 
     counts_files  ="pbmc8k_counts.tab.gz", 
     peak_info_file="pbmc8k_polyA_peaks.gff", 
-    organism      ="human_ens94",
+    organism      ="human_ens100",
     )
 
 

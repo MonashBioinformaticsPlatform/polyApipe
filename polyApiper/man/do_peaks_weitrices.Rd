@@ -11,6 +11,8 @@ do_peaks_weitrices(
   utr_or_extension_only = FALSE,
   cells_to_use = NULL,
   peak_min_present = 50,
+  peak_min_prop = 0.01,
+  do_logNormCounts = TRUE,
   do_computeSumFactors = TRUE
 )
 }

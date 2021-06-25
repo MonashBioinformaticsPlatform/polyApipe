@@ -16,6 +16,8 @@ do_pipeline(
   remove_mispriming = TRUE,
   utr_or_extension_only = FALSE,
   peak_min_present = 50,
+  peak_min_prop = 0.01,
+  do_logNormCounts = TRUE,
   do_computeSumFactors = TRUE,
   title = "polyApiper pipeline run",
   stages = 1:length(PIPELINE_STAGES)
@@ -42,15 +44,15 @@ do_pipeline(
 
 \item{peak_min_present}{A peak is retained if it is present in this number of cells.}
 
-\item{do_computeSumFactors}{Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.}
+\item{peak_min_prop}{A peak is used for APA and gene expression calculations only if it constitutes at least this proportion of total UMIs for the gene.}
+
+\item{do_logNormCounts}{Compute logcounts for gene and peak expression?}
+
+\item{do_computeSumFactors}{When computing logcounts, use scran::computeSumFactors? If not, unadjusted cell library sizes are used.}
 
 \item{title}{Title to use in report.}
 
 \item{stages}{Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.}
-
-\item{p}{Number of components to find.}
-
-\item{n_restarts}{Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.}
 }
 \value{
 There is no return value. Results are placed in the \code{out_path} directory. They can be loaded using \code{load_banquet(out_path)}.

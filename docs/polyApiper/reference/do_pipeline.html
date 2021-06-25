@@ -126,6 +126,8 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
   remove_mispriming <span class='op'>=</span> <span class='cn'>TRUE</span>,
   utr_or_extension_only <span class='op'>=</span> <span class='cn'>FALSE</span>,
   peak_min_present <span class='op'>=</span> <span class='fl'>50</span>,
+  peak_min_prop <span class='op'>=</span> <span class='fl'>0.01</span>,
+  do_logcounts <span class='op'>=</span> <span class='cn'>TRUE</span>,
   do_computeSumFactors <span class='op'>=</span> <span class='cn'>TRUE</span>,
   title <span class='op'>=</span> <span class='st'>"polyApiper pipeline run"</span>,
   stages <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>PIPELINE_STAGES</span><span class='op'>)</span>
@@ -175,8 +177,16 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
       <td><p>A peak is retained if it is present in this number of cells.</p></td>
     </tr>
     <tr>
+      <th>peak_min_prop</th>
+      <td><p>A peak is used for APA and gene expression calculations only if it constitutes at least this proportion of total UMIs for the gene.</p></td>
+    </tr>
+    <tr>
+      <th>do_logcounts</th>
+      <td><p>Compute logcounts?</p></td>
+    </tr>
+    <tr>
       <th>do_computeSumFactors</th>
-      <td><p>Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.</p></td>
+      <td><p>When computing logcounts, use scran::computeSumFactors? If not, unadjusted cell library sizes are used.</p></td>
     </tr>
     <tr>
       <th>title</th>

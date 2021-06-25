@@ -5,13 +5,21 @@
 #' @import weitrix
 #' @import topconfects
 #'
+#' @importFrom stats cor median runif
+#' @importFrom utils data
+#'
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom magrittr %>%
 #' @importFrom tibble rownames_to_column
-#' @importFrom dplyr left_join distinct tibble row_number
+#' @importFrom dplyr left_join inner_join distinct tibble row_number
+#' @importFrom readr write_csv
+#' @importFrom tidyr unnest
 #' @importFrom purrr map map_lgl map_chr pmap_df
 #' @importFrom jsonlite read_json write_json
 #' @importFrom assertthat assert_that
+#'
+#' @importFrom S4Vectors
+#'     metadata
 #'
 #' @importFrom BiocParallel bpparam
 #'
@@ -24,9 +32,6 @@
 #'     getRealizationBackend setRealizationBackend rowsum realize
 #'     sweep
 #'
-#' @importFrom Matrix
-#'     Matrix
-#'
 #' @importFrom SingleCellExperiment 
 #'     SingleCellExperiment counts logcounts sizeFactors sizeFactors<- reducedDim
 #'
@@ -34,7 +39,7 @@
 #'     SummarizedExperiment assay assay<- rowData rowData<- rowRanges colData colData<-
 #'
 #' @importFrom scran
-#'     computeSumFactors
+#'     quickCluster computeSumFactors
 #'
 #' @importFrom scater
 #'     logNormCounts

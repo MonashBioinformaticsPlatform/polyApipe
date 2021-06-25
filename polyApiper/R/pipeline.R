@@ -44,11 +44,9 @@ PIPELINE_STAGES = c(
 #' 
 #' @param peak_min_prop A peak is used for APA and gene expression calculations only if it constitutes at least this proportion of total UMIs for the gene.
 #'
-#' @param do_computeSumFactors Use scran::computeSumFactors? If not, unadjusted cell library sizes are used.
+#' @param do_logNormCounts Compute logcounts for gene and peak expression?
 #'
-#' @param p Number of components to find.
-#'
-#' @param n_restarts Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.
+#' @param do_computeSumFactors When computing logcounts, use scran::computeSumFactors? If not, unadjusted cell library sizes are used.
 #'
 #' @param title Title to use in report.
 #'
@@ -79,6 +77,7 @@ do_pipeline <- function(
         peak_min_present=50,
         peak_min_prop=0.01,
         # log expression level options
+        do_logNormCounts=TRUE,
         do_computeSumFactors=TRUE, 
                 
         title="polyApiper pipeline run",
@@ -147,6 +146,7 @@ do_pipeline <- function(
             cells_to_use=cells_to_use,
             remove_mispriming=remove_mispriming, 
             utr_or_extension_only=utr_or_extension_only,
+            do_logNormCounts=do_logNormCounts,
             do_computeSumFactors=do_computeSumFactors)
     }
     
@@ -162,40 +162,47 @@ do_pipeline <- function(
 
 
 
-
-
-#' @export
-se_counts_weitrix <- function(se, size_factors=NULL, do_computeSumFactors=TRUE) {
+# Add logcounts and some summary information to a SingleCellExperiment object
+se_logcounts <- function(se, size_factors=NULL, do_logNormCounts=TRUE, do_computeSumFactors=TRUE) {
     se <- load_banquet(se)
     
-    if (do_computeSumFactors && is.null(size_factors)) {
-        message("Preclustering")
-        preclusters <- quickCluster(se, block=colData(se)$batch, block.BPPARAM=bpparam())
-        message(length(unique(preclusters)), " preclusters")
-        colData(se)$preclusters <- preclusters
-        se <- computeSumFactors(se, cluster=preclusters, BPPARAM=bpparam())
-    } else {
-        if (is.null(size_factors))
-            size_factors <- colSums(assay(se,"counts")) 
-        sizeFactors(se) <- size_factors
-    }
-    
-    se <- logNormCounts(se)
+    col_sums <- colSums(assay(se,"counts"))
+    row_sums <- rowSums(assay(se,"counts"))
 
-    weights <- matrix(1,nrow=nrow(se),ncol=ncol(se))
-    rownames(weights) <- rownames(se)
-    colnames(weights) <- colnames(se)
-    assay(se, "weights") <- weights
-    result <- bless_weitrix(se, "logcounts", "weights")
+    col_present <- colSums(assay(se,"counts") > 0)
+    row_present <- rowSums(assay(se,"counts") > 0)
+
+    if (do_logNormCounts) {
+        if (do_computeSumFactors && is.null(size_factors)) {
+            message("Preclustering")
+            preclusters <- quickCluster(se, block=colData(se)$batch, block.BPPARAM=bpparam())
+            message(length(unique(preclusters)), " preclusters")
+            colData(se)$preclusters <- preclusters
+            se <- computeSumFactors(se, cluster=preclusters, BPPARAM=bpparam())
+        } else {
+            if (is.null(size_factors))
+                size_factors <- col_sums 
+            sizeFactors(se) <- size_factors
+        }
+
+        # Prevent errors for any completely missing cells
+        sizeFactors(se)[col_present==0] <- 1
     
-    rowData(result)$total_count <- rowSums(assay(se,"counts"))
-    colData(result)$total_count <- colSums(assay(se,"counts"))
+        se <- logNormCounts(se)
+    }
+
+    rowData(se)$total_count <- row_sums
+    rowData(se)$total_present <- row_present
+    colData(se)$total_count <- col_sums
+    colData(se)$total_present <- col_present
     
-    result
+    se
 }
 
 
 amalgamate <- function(vec) paste(unique(vec),collapse="/")
+
+realize_RleArray <- function(mat) realize(mat, BACKEND="RleArray")
 
 #' Shifts and proportions weitrices from peak counts
 #'
@@ -215,6 +222,7 @@ do_peaks_weitrices <- function(
         peak_min_present=50,
         peak_min_prop=0.01,
         # log expression level options
+        do_logNormCounts=TRUE,
         do_computeSumFactors=TRUE) {
 
     peaks_se <- load_banquet(peaks_se)
@@ -301,8 +309,8 @@ do_peaks_weitrices <- function(
         gene_info[match(rownames(result_gene), gene_info$symbol_unique),,drop=F]
     
     message("Compute normalized, log transformed counts")
-    result_gene <- se_counts_weitrix(result_gene, 
-        do_computeSumFactors=do_computeSumFactors)
+    result_gene <- se_logcounts(result_gene, 
+        do_logNormCounts=do_logNormCounts, do_computeSumFactors=do_computeSumFactors)
 
     saveHDF5SummarizedExperiment(
         result_gene, file.path(out_path,"gene_expr"), replace=TRUE)
@@ -310,8 +318,8 @@ do_peaks_weitrices <- function(
     rm(result_gene)
 
     # Use rd ordering    
-    result_peak <- se_counts_weitrix(peaks_se_final[rd$name,],
-        size_factors=gene_size_factors, do_computeSumFactors=FALSE)
+    result_peak <- se_logcounts(peaks_se_final[rd$name,],
+        size_factors=gene_size_factors, do_logNormCounts=do_logNormCounts, do_computeSumFactors=FALSE)
 
     saveHDF5SummarizedExperiment(
         result_peak, file.path(out_path,"peak_expr"), replace=TRUE)
@@ -321,7 +329,7 @@ do_peaks_weitrices <- function(
     # Outputs based on two or more peaks
             
     message("Compute APA shifts and peak proportions")
-    result_shift <- counts_shift(assay(peaks_se_final,"counts"), grouping, typecast=Matrix)
+    result_shift <- counts_shift(assay(peaks_se_final,"counts"), grouping, typecast=realize_RleArray)
 
     gene_info <-
         gene_info[match(rownames(result_shift), gene_info$symbol_unique),,drop=F]
@@ -335,7 +343,7 @@ do_peaks_weitrices <- function(
         result_shift, file.path(out_path,"shift"), replace=TRUE)
     rm(result_shift)
 
-    result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping, typecast=Matrix)
+    result_prop <- counts_proportions(assay(peaks_se_final,"counts"), grouping, typecast=realize_RleArray)
     rowData(result_prop) <- rowData(peaks_se_final)[rownames(result_prop),]
     colData(result_prop) <- colData(peaks_se_final)
 

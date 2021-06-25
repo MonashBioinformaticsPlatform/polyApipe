@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub — do_ensembl_organism • polyApiper</title>
+<title>Shifts and proportions weitrices from peak counts — do_peaks_weitrices • polyApiper</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub — do_ensembl_organism" />
-<meta property="og:description" content="Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub" />
+<meta property="og:title" content="Shifts and proportions weitrices from peak counts — do_peaks_weitrices" />
+<meta property="og:description" content="Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions." />
 
 
 
@@ -103,26 +103,31 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub</h1>
+    <h1>Shifts and proportions weitrices from peak counts</h1>
     
-    <div class="hidden name"><code>do_ensembl_organism.Rd</code></div>
+    <div class="hidden name"><code>do_peaks_weitrices.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub</p>
+    <p>Convert a SummarizedExperiment of peak counts into a weitrix of shifts and a weitrix of proportions.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>do_ensembl_organism</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>do_peaks_weitrices</span><span class='op'>(</span>
   <span class='va'>out_path</span>,
-  <span class='va'>species</span>,
-  <span class='va'>version</span>,
-  hard_extension <span class='op'>=</span> <span class='fl'>20</span>,
-  extension <span class='op'>=</span> <span class='fl'>2000</span>,
-  unstranded_gaps <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  omit_biotypes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>)</span>
+  <span class='va'>peaks_se</span>,
+  remove_mispriming <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  utr_or_extension_only <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  cells_to_use <span class='op'>=</span> <span class='cn'>NULL</span>,
+  peak_min_present <span class='op'>=</span> <span class='fl'>50</span>,
+  peak_min_prop <span class='op'>=</span> <span class='fl'>0.01</span>,
+  do_computeSumFactors <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
 
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Peaks with less than an average of min_peak_count_avg counts will be discarded.</p>
+<p>Only genes with two or more peaks are included.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

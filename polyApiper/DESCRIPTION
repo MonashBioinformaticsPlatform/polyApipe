@@ -18,6 +18,8 @@ Depends:
     SingleCellExperiment
 Imports: 
     methods,
+    stats,
+    utils,
     magrittr,
     tibble,
     dplyr,
@@ -48,7 +50,6 @@ Imports:
     weitrix,
     topconfects,
     limma,
-    Matrix,
     DelayedMatrixStats,
     IRanges,
     msigdbr,
