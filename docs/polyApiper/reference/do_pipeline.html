@@ -127,7 +127,7 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
   utr_or_extension_only <span class='op'>=</span> <span class='cn'>FALSE</span>,
   peak_min_present <span class='op'>=</span> <span class='fl'>50</span>,
   peak_min_prop <span class='op'>=</span> <span class='fl'>0.01</span>,
-  do_logcounts <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  do_logNormCounts <span class='op'>=</span> <span class='cn'>TRUE</span>,
   do_computeSumFactors <span class='op'>=</span> <span class='cn'>TRUE</span>,
   title <span class='op'>=</span> <span class='st'>"polyApiper pipeline run"</span>,
   stages <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>PIPELINE_STAGES</span><span class='op'>)</span>
@@ -181,8 +181,8 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
       <td><p>A peak is used for APA and gene expression calculations only if it constitutes at least this proportion of total UMIs for the gene.</p></td>
     </tr>
     <tr>
-      <th>do_logcounts</th>
-      <td><p>Compute logcounts?</p></td>
+      <th>do_logNormCounts</th>
+      <td><p>Compute logcounts for gene and peak expression?</p></td>
     </tr>
     <tr>
       <th>do_computeSumFactors</th>
@@ -195,14 +195,6 @@ with <code>load_banquet</code>. An HTML report is also produced.</p>
     <tr>
       <th>stages</th>
       <td><p>Stages of the pipeline to run. Stages are listed in PIPELINE_STAGES.</p></td>
-    </tr>
-    <tr>
-      <th>p</th>
-      <td><p>Number of components to find.</p></td>
-    </tr>
-    <tr>
-      <th>n_restarts</th>
-      <td><p>Use this many initial restarts when finding components. If the scree plot is uneven, increasing this may produce better results.</p></td>
     </tr>
     </table>
 

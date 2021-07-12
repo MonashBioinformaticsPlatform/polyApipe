@@ -186,7 +186,11 @@ se_logcounts <- function(se, size_factors=NULL, do_logNormCounts=TRUE, do_comput
         }
 
         # Prevent errors for any completely missing cells
-        sizeFactors(se)[col_present==0] <- 1
+        #sizeFactors(se)[col_present==0] <- 1
+        missing <- sizeFactors(se) <= 0
+        if (any(missing))
+            message(sum(missing), " cells with sizeFactor <= 0. Will arbitraily set these to 1.")
+        sizeFactors(se)[ missing ] <- 1
     
         se <- logNormCounts(se)
     }

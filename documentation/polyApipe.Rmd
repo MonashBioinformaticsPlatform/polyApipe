@@ -133,18 +133,29 @@ polyApiper:::do_ensembl_organism(
     species="Homo sapiens", 
     version="100")
 
+# Which cell names to use.
+tsne <- read.csv("analysis/tsne/2_components/projection.csv")
+cells_to_use <- tsne$Barcode
+
+# How cell names are constructed from batch name and cell barcode.
+# Should match naming in cells_to_use.
+cell_name_func <- function(batch,cell) paste0(batch,cell,"-1")
+
 # - Load output from polyApipe.py
 # - Produce HDF5Array SingleCellExperiment objects containing counts
 # - Perform further analysis steps
 polyApiper:::do_pipeline(
     out_path      ="pbmc8k_banquet", 
-    counts_files  ="pbmc8k_counts.tab.gz", 
+    counts_files  =c("pbmc8k_counts.tab.gz"),
+    batch_names   =c(""),
     peak_info_file="pbmc8k_polyA_peaks.gff", 
     organism      ="human_ens100",
+    cells_to_use  =cells_to_use,
+    cell_name_func=cell_name_func
     )
 
 
-# To [re]-load for analysis.
+# To load all outputs for further analysis.
 banq <- load_banquet("pbmc8k_banquet")
 ```
 

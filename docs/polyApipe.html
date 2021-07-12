@@ -220,9 +220,10 @@ pre code {
 <h2>Get input files</h2>
 <p>First, need the aligned bam files. The output of the 10X <a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger">cellRanger</a> pipeline will work with default parameters.</p>
 <p>To obtain the data files for this analysis.</p>
-<pre class="sh"><code># Bam files and index. NB: large files.
+<pre class="sh"><code># Bam file and index. NB: large file (68GB).
 wget http://s3-us-west-2.amazonaws.com/10x.files/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_possorted_genome_bam.bam
 wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_possorted_genome_bam_index.bam.bai
+mv pbmc8k_possorted_genome_bam_index.bam.bai pbmc8k_possorted_genome_bam.bam.bai
 
 # Gzipped tar file with the precomputed tsne and clusters information
 wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_analysis.tar.gz
@@ -254,22 +255,33 @@ tar -xzf pbmc8k_analysis.tar.gz</code></pre>
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub
 # - Classify genomic regions into exon,intron,3'UTR,extension
 polyApiper:::do_ensembl_organism(
-    out_path=&quot;human_ens94&quot;, 
+    out_path=&quot;human_ens100&quot;, 
     species=&quot;Homo sapiens&quot;, 
-    version=&quot;94&quot;)
+    version=&quot;100&quot;)
+
+# Which cell names to use.
+tsne &lt;- read.csv(&quot;analysis/tsne/2_components/projection.csv&quot;)
+cells_to_use &lt;- tsne$Barcode
+
+# How cell names are constructed from batch name and cell barcode.
+# Should match naming in cells_to_use.
+cell_name_func &lt;- function(batch,cell) paste0(batch,cell,&quot;-1&quot;)
 
 # - Load output from polyApipe.py
 # - Produce HDF5Array SingleCellExperiment objects containing counts
 # - Perform further analysis steps
 polyApiper:::do_pipeline(
     out_path      =&quot;pbmc8k_banquet&quot;, 
-    counts_files  =&quot;pbmc8k_counts.tab.gz&quot;, 
+    counts_files  =c(&quot;pbmc8k_counts.tab.gz&quot;),
+    batch_names   =c(&quot;&quot;),
     peak_info_file=&quot;pbmc8k_polyA_peaks.gff&quot;, 
-    organism      =&quot;human_ens94&quot;,
+    organism      =&quot;human_ens100&quot;,
+    cells_to_use  =cells_to_use,
+    cell_name_func=cell_name_func
     )
 
 
-# To [re]-load for analysis.
+# To load all outputs for further analysis.
 banq &lt;- load_banquet(&quot;pbmc8k_banquet&quot;)</code></pre>
 <p>Now the <em>pbmc8k_banquet</em> directory has been setup - with APA information ready for downstream analysis.</p>
 </div>
