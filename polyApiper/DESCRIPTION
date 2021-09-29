@@ -55,5 +55,6 @@ Imports:
     msigdbr,
     GSEABase,
     shiny,
-    DT
+    DT,
+    rmarkdown
 RoxygenNote: 7.1.1

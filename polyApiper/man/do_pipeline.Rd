@@ -20,7 +20,7 @@ do_pipeline(
   do_logNormCounts = TRUE,
   do_computeSumFactors = TRUE,
   title = "polyApiper pipeline run",
-  stages = 1:length(PIPELINE_STAGES)
+  stages = seq_along(PIPELINE_STAGES)
 )
 }
 \arguments{

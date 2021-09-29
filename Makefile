@@ -3,6 +3,7 @@ document :
 	cd polyApiper ; Rscript -e "devtools::document()"
 
 check : document
+	cd polyApiper ; rm -f polyApiper_*.tar.gz
 	cd polyApiper ; R CMD build .
 	cd polyApiper ; R CMD check polyApiper_*.tar.gz
 	cd polyApiper ; rm polyApiper_*.tar.gz

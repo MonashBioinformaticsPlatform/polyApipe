@@ -18,14 +18,14 @@
 #' 
 #' @examples  
 #' 
+#' \dontrun{
+#' 
 #' counts_file    <- system.file("extdata", "demo_dataset/demo_counts/SRR5259354_demo.tab.gz", package = "polyApiper")
 #' peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", package = "polyApiper") 
 #' 
 #' sce <- load_peaks_counts_into_sce(counts_file    =counts_file1, 
 #'                                   peak_info_file = peak_info_file, 
 #'                                   output         = "demo") 
-#' 
-#' \dontrun{
 #' 
 #' sce <- load_peaks_counts_into_sce(real_counts_file, "real_polyA_peaks.gff", output = "mysce")
 #' 
@@ -184,6 +184,8 @@ load_peaks_counts_into_sce <- function(
 #' 
 #' @examples 
 #' 
+#' \dontrun{
+#'
 #' counts_file1   <- system.file("extdata", "demo_dataset/demo_counts/SRR5259354_demo.tab.gz", package = "polyApiper")
 #' counts_file2   <- system.file("extdata", "demo_dataset/demo_counts/SRR5259422_demo.tab.gz", package = "polyApiper")
 #' peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", package = "polyApiper") 
@@ -192,6 +194,8 @@ load_peaks_counts_into_sce <- function(
 #'                batch_names    = c("demo1","demo2"),
 #'                peak_info_file = peak_info_file,
 #'                output = "demo1and2")
+#'
+#' }
 #' 
 #' @family peak counts loading functions
 #' 
@@ -270,13 +274,12 @@ load_peaks_counts_files_into_sce <- function(
 #' counts_dir     <- dirname(system.file("extdata", "demo_dataset/demo_counts/SRR5259354_demo.tab.gz", package = "polyApiper"))
 #' peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", package = "polyApiper") 
 #' 
+#' \dontrun{
+#'
 #' sce <- load_peaks_counts_dir_into_sce(counts_dir, 
 #'                                peak_info_file = peak_info_file, 
 #'                                output = "demodirsce",
 #'                                min_reads_per_barcode=1) # Required for tiny demo data.
-#'
-#'
-#' \dontrun{
 #'
 #' sce <- load_peaks_counts_dir_into_sce("myexpr_counts/", "my_expr_polyA_peaks.gff", "./myexpr_sce") 
 #'

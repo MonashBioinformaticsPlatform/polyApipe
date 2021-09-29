@@ -170,13 +170,12 @@ load_peaks_counts_files_into_sce/load_peaks_counts_into_sce</p></td>
 <span class='va'>counts_dir</span>     <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/basename.html'>dirname</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"demo_dataset/demo_counts/SRR5259354_demo.tab.gz"</span>, package <span class='op'>=</span> <span class='st'>"polyApiper"</span><span class='op'>)</span><span class='op'>)</span>
 <span class='va'>peak_info_file</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"demo_dataset/demo_polyA_peaks.gff"</span>, package <span class='op'>=</span> <span class='st'>"polyApiper"</span><span class='op'>)</span> 
 
+<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+
 <span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>load_peaks_counts_dir_into_sce</span><span class='op'>(</span><span class='va'>counts_dir</span>, 
                                peak_info_file <span class='op'>=</span> <span class='va'>peak_info_file</span>, 
                                output <span class='op'>=</span> <span class='st'>"demodirsce"</span>,
                                min_reads_per_barcode<span class='op'>=</span><span class='fl'>1</span><span class='op'>)</span> <span class='co'># Required for tiny demo data.</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading /scratch/tmp/Rtmpm4BUb0/temp_libpath1c5f769bd44/polyApiper/extdata/demo_dataset/demo_counts/SRR5259354_demo.tab.gz</span></div><div class='output co'>#&gt; <span class='message'>Loaded 9 x 1646 matrix of counts</span></div><div class='output co'>#&gt; <span class='error'>Error in saveHDF5SummarizedExperiment(sce, output, as.sparse = FALSE,     ...): unused argument (min_reads_per_barcode = 1)</span></div><div class='input'>
-
-<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 
 <span class='va'>sce</span> <span class='op'>&lt;-</span> <span class='fu'>load_peaks_counts_dir_into_sce</span><span class='op'>(</span><span class='st'>"myexpr_counts/"</span>, <span class='st'>"my_expr_polyA_peaks.gff"</span>, <span class='st'>"./myexpr_sce"</span><span class='op'>)</span> 
 

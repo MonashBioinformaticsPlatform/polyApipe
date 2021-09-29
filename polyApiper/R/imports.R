@@ -8,6 +8,8 @@
 #' @importFrom stats cor median runif
 #' @importFrom utils data
 #'
+#' @importFrom rmarkdown render
+#'
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom magrittr %>%
 #' @importFrom tibble rownames_to_column
@@ -70,8 +72,6 @@
 #' @importFrom msigdbr msigdbr
 #'
 #' @importFrom GSEABase description geneIds
-#'
-#' @importFrom fgsea fgsea
 #'
 #' @importFrom shiny 
 #'      shinyApp fluidPage titlePanel tabPanel navlistPanel

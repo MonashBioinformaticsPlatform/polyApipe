@@ -82,7 +82,7 @@ do_pipeline <- function(
                 
         title="polyApiper pipeline run",
                 
-        stages=1:length(PIPELINE_STAGES)) {
+        stages=seq_along(PIPELINE_STAGES)) {
 
     if (is.numeric(stages)) 
         stages <- PIPELINE_STAGES[stages]

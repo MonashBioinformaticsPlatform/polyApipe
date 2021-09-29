@@ -37,6 +37,8 @@ and colData will include the batch.
 }
 \examples{
 
+\dontrun{
+
 counts_file1   <- system.file("extdata", "demo_dataset/demo_counts/SRR5259354_demo.tab.gz", package = "polyApiper")
 counts_file2   <- system.file("extdata", "demo_dataset/demo_counts/SRR5259422_demo.tab.gz", package = "polyApiper")
 peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", package = "polyApiper") 
@@ -45,6 +47,8 @@ sce <- load_peaks_counts_files_into_sce(c(counts_file1,counts_file2),
                batch_names    = c("demo1","demo2"),
                peak_info_file = peak_info_file,
                output = "demo1and2")
+
+}
 
 }
 \seealso{

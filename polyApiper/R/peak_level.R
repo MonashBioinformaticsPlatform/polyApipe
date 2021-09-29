@@ -3,7 +3,8 @@
 #
 
 
-# Union-Find algorithms to identify connected groups
+# Union-Find algorithm to identify connected groups
+#
 unionize <- function(as,bs, further_nodes=NULL) {
     all_names <- unique(c(as,bs,further_nodes))
     as <- match(as, all_names)
@@ -29,6 +30,7 @@ unionize <- function(as,bs, further_nodes=NULL) {
 
 # Helper function for se_reassign.
 # If gene is protein coding, group regions based on shared transcript ids.
+#
 utr_grouping <- function(biotype, region, tx_id, misprime, orderer) {
     grouping <- rep(NA_integer_, length(region))
     if (any(is.na(biotype) | biotype != "protein_coding"))
@@ -48,6 +50,8 @@ utr_grouping <- function(biotype, region, tx_id, misprime, orderer) {
 }
 
 
+#' Annotate SummarizedExperiment of peak-level data with relationship to genes 
+#'
 #' @export
 se_reassign <- function(se, organism) {
     se <- load_banquet(se)

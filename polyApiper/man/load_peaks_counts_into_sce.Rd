@@ -44,14 +44,14 @@ SingleCellExperiment for analysis.
 \examples{
  
 
+\dontrun{
+
 counts_file    <- system.file("extdata", "demo_dataset/demo_counts/SRR5259354_demo.tab.gz", package = "polyApiper")
 peak_info_file <- system.file("extdata", "demo_dataset/demo_polyA_peaks.gff", package = "polyApiper") 
 
 sce <- load_peaks_counts_into_sce(counts_file    =counts_file1, 
                                   peak_info_file = peak_info_file, 
                                   output         = "demo") 
-
-\dontrun{
 
 sce <- load_peaks_counts_into_sce(real_counts_file, "real_polyA_peaks.gff", output = "mysce")
 

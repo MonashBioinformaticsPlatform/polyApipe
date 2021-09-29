@@ -166,6 +166,8 @@ e.g. n_max, min_reads_per_barcode (but not cell_prefix or missing_peaks_are_zero
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
+<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+
 <span class='va'>counts_file1</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"demo_dataset/demo_counts/SRR5259354_demo.tab.gz"</span>, package <span class='op'>=</span> <span class='st'>"polyApiper"</span><span class='op'>)</span>
 <span class='va'>counts_file2</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"demo_dataset/demo_counts/SRR5259422_demo.tab.gz"</span>, package <span class='op'>=</span> <span class='st'>"polyApiper"</span><span class='op'>)</span>
 <span class='va'>peak_info_file</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"demo_dataset/demo_polyA_peaks.gff"</span>, package <span class='op'>=</span> <span class='st'>"polyApiper"</span><span class='op'>)</span> 
@@ -174,8 +176,9 @@ e.g. n_max, min_reads_per_barcode (but not cell_prefix or missing_peaks_are_zero
                batch_names    <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"demo1"</span>,<span class='st'>"demo2"</span><span class='op'>)</span>,
                peak_info_file <span class='op'>=</span> <span class='va'>peak_info_file</span>,
                output <span class='op'>=</span> <span class='st'>"demo1and2"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading /scratch/tmp/Rtmpm4BUb0/temp_libpath1c5f769bd44/polyApiper/extdata/demo_dataset/demo_counts/SRR5259354_demo.tab.gz</span></div><div class='output co'>#&gt; <span class='message'>Loaded 9 x 1646 matrix of counts</span></div><div class='output co'>#&gt; <span class='message'>Loading /scratch/tmp/Rtmpm4BUb0/temp_libpath1c5f769bd44/polyApiper/extdata/demo_dataset/demo_counts/SRR5259422_demo.tab.gz</span></div><div class='output co'>#&gt; <span class='message'>Loaded 10 x 1793 matrix of counts</span></div><div class='output co'>#&gt; <span class='error'>Error in .replace_dir(dir, replace): Directory "demo1and2" already exists. Use 'replace=TRUE' to replace it.</span>
-#&gt; <span class='error'>  Its content will be lost!</span></div><div class='input'>
+
+<span class='op'>}</span>
+
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

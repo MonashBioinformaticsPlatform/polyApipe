@@ -1,5 +1,6 @@
 
-
+#' Produce a short overview report for the pipeline output
+#'
 #' @export
 do_pipeline_report <- function(
         out_path, 
@@ -11,7 +12,7 @@ do_pipeline_report <- function(
     
     ensure_dir(out_path)
     
-    rmarkdown::render(
+    render(
         system.file("rmd","pipeline_overview.Rmd", package="polyApiper"),
         intermediates_dir=out_path,
         output_dir=out_path,

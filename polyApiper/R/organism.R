@@ -17,6 +17,8 @@ get_ah <- function(ahid) {
     AnnotationHub()[[ahid]]
 }
 
+#' Get AnnotationHub ID for an appropriate EnsDb
+#'
 #' @export
 get_ensdb <- function(species=NULL, version=NULL) {
     ah <- AnnotationHub()
@@ -36,6 +38,8 @@ get_ensdb <- function(species=NULL, version=NULL) {
     names(ah)
 }
 
+#' Get AnnotationHub ID for an ENSEMBL genome sequence
+#'
 #' @export
 get_dna <- function(species, version) {
     ah <- AnnotationHub()
