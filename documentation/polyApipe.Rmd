@@ -1,6 +1,5 @@
 ---
 title: "Using polyApipe"
-date: "2 July 2019"
 output: 
   html_document: 
     theme: united
@@ -13,36 +12,32 @@ bibliography: library.bib
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-_NB: Document under active development!_
-
 
 # Overview
 
  ![](polyApipe_preprocessing_workflow.png)
 
 
-1. **Input** :  The input to polyApipe is one or more indexed bam files. 
-   + These must be soft-masked so the unaligned 'A's can be found,
-   (e.g. from an aligner such as STAR [@Dobin2013]). 
-   + They should also contain corrected cell barcode tags and uncorrected UMI tags. 
-   (NB: Output from the cellranger pipeline typically used by 10X data is suitable)
-2. **PolyA sites and counts** : Next python script polyApipe.py will prepare the
-data for loading into R as follows;
-   + *Find polyA-containing reads in bam files.* These will have a soft-clipped
-   stretch of polyA (or polyT depending on strand) at the 3' end of the read. 
-   This is done for every bam file, and written to _polyA.bam files.
-   + *Look for sites where there are a large number of polyA reads.* The polyA site
-   is defined 250bp (--region_size) upstream of where the unaligned As begin 
-   (ie end of transcription).
-   This is done across a pool of all samples' polyA reads in a stranded manner, 
-   resulting in a single .gff file defining peaks.
-   + *Count reads per APA site per cell.* Create a counts matrix of total reads 
-   (not just polyA reads) falling in each APA site. 
-   This step uses featureCounts [@Liao2014] and UMI-tools [@Smith2017] to count 
-   cells per feature using the uncorrected UMI tags (and corrected cell barcodes).
-   There will be one file per sample / input bam, saved as *_counts.tab.gz.
-3. **Calculate APA in R. ** The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis.
-4. **APA Analysis** can then be performed, we recommend using the [weitrix](http://www.bioconductor.org/packages/release/bioc/html/weitrix.html) package.
+## 1. Inputs
+
+The input to polyApipe is one or more indexed BAM files. The most usual input is BAM files produced from the [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) pipeline, based on 10X scRNA-Seq data. If you have something different, the requirements are:
+
++ Alignments must be soft-masked so the unaligned 'A's can be found (e.g. from an aligner such as STAR [@Dobin2013]). 
++ Alignments must contain corrected cell barcode tags and uncorrected UMI tags. 
+
+## 2. polyApipe.py: get poly(A) sites and counts
+
+Next, use the Python 3 script polyApipe.py to process the BAM files and produce poly(A) sites and UMI counts:
+
++ *Find polyA-containing reads in bam files.* These will have a soft-clipped stretch of polyA (or polyT depending on strand) at the 3' end of the read. This is done for every BAM file, and written to _polyA.bam files.
++ *Look for sites where there are a large number of poly(A) reads.* The poly(A) site is defined 250bp (`--region_size`) upstream of where the unaligned As begin (i.e. end of transcription). This is done across a pool of all samples' polyA reads in a stranded manner, resulting in a single .gff file defining peaks.
++ *Count reads per APA site per cell.* Create a counts matrix of total UMIs falling in each APA site (using all reads, not just polyA reads). This step uses featureCounts [@Liao2014] and UMI-tools [@Smith2017] to count cells per feature using the uncorrected UMI tags (and corrected cell barcodes). There will be one file per sample / input bam, saved as *_counts.tab.gz.
+
+## 3. polyApiper: ready for downstream analysis in R 
+
+Next, use the polyApiper R package to perform further filtering of poly(A) sites, associates sites with genes, and put the data into a convenient form for working with in R.
+
+We recommend using our [weitrix](http://www.bioconductor.org/packages/release/bioc/html/weitrix.html) package to further analyse these results. Code to get you started is given in the example below, and further details can be found in the weitrix package vignettes.
 
 
 <!-- Todo: put polyApipe into its own conda? -->
@@ -61,11 +56,9 @@ genomics: (https://support.10xgenomics.com/single-cell-gene-expression/datasets/
 
 ## Get input files
 
-First, need the aligned bam files. 
-The output of the 10X 
-[cellRanger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) 
+First, need the aligned bam files. The output of the 10X 
+[Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) 
 pipeline will work with default parameters.
-
 
 To obtain the data files for this analysis.
 
@@ -81,53 +74,53 @@ tar -xzf pbmc8k_analysis.tar.gz
 ```
 
 
+## Find and quantify poly(A) sites
 
-
-## Find and quantify polyA sites
-
-This command will produces the input required for polyApiper.
-It takes some time (hours) to run.
+This command will produces the input required for polyApiper. It takes some time (hours) to run.
 ```{sh eval=FALSE}
 ./polyApipe.py  -i pbmc8k_possorted_genome_bam.bam -o pbmc8k -t 8
 ```
 
-There is only one sample in this experiment, so specifing the bam file with -i.
-And -t means that multithreaded tools will use 8 threads. 
+There is only one sample in this experiment, so specifing the bam file with -i. And -t means that multithreaded tools will use 8 threads. 
 
 Once finished, the following files are output:
 
-* **pbmc8k_polyA.bam** : A bam file of all the polyA-containing reads seen in the input bam.
-* **pbmc8k_polyA.bam.bai** : Bam index.
-* **pbmc8k_polyA_peaks.gff** : gff file defining the polyA site regions, defined from peaks of polyA reads in the input. 
+**pbmc8k_polyA.bam**: A BAM file of all the polyA-containing reads seen in the input bam.
+
+**pbmc8k_polyA.bam.bai**: BAM index.
+
+**pbmc8k_polyA_peaks.gff**: GFF file defining the poly(A) site regions, defined from peaks of poly(A) reads in the input. 
+
 The sites are typically 250bp (*--region_size*) upstream of the polyA site (unless larger regions were merged).
 The misprime status (depending on *--misprime_A_count* and *--misprime_in*) flags sites near A-rich genomic regions. 
 E.g.
 
+```
+1	polyAends	polyAends	16442	16691	.	-	.	peak="1_16442_r"; peakdepth="10"; misprime="False";
+1	polyAends	polyAends	184920	185169	.	-	.	peak="1_184920_r"; peakdepth="179"; misprime="False";
+1	polyAends	polyAends	632454	632703	.	+	.	peak="1_632703_f"; peakdepth="3468"; misprime="True";
+```
 
-         1	polyAends	polyAends	16442	16691	.	-	.	peak="1_16442_r"; peakdepth="10"; misprime="False";
-         1	polyAends	polyAends	184920	185169	.	-	.	peak="1_184920_r"; peakdepth="179"; misprime="False";
-         1	polyAends	polyAends	632454	632703	.	+	.	peak="1_632703_f"; peakdepth="3468"; misprime="True";
-
-
-* **pbmc8k_counts.tab.gz** : A gzipped tab-delimited text file of the number of reads aligned per cell in each polyA site peak.
+**pbmc8k_counts.tab.gz**: A gzipped tab-delimited text file of the number of reads aligned per cell in each polyA site peak.
 All reads are counted, whether or not they include a polyA. 
 Format _\<peakname\> \<cell\> \<number of reads\>_ .
 
-         10_44994717_f	AACTGGTAGTACGCCC	1
-         10_44994717_f	AACTGGTCAGTCCTTC	2
-         10_44994717_f	AACTTTCCAGTCAGAG	1
+```
+10_44994717_f	AACTGGTAGTACGCCC	1
+10_44994717_f	AACTGGTCAGTCCTTC	2
+10_44994717_f	AACTTTCCAGTCAGAG	1
+```
 
 
+## Further processing in R
 
-
-
-## Calculate APA in R
+The R part of the pipeline is now used to further filter APA sites, associate them with genes, and provide files ready for downstream analysis.
 
 ```{r eval=FALSE}
 library(polyApiper)
 
 # - Get appropriate ENSEMBL annotations and DNA sequence from AnnotationHub
-# - Classify genomic regions into exon,intron,3'UTR,extension
+# - Classify genomic regions into exon, intron, 3'UTR, extension
 polyApiper:::do_ensembl_organism(
     out_path="human_ens100", 
     species="Homo sapiens", 
@@ -154,12 +147,11 @@ polyApiper:::do_pipeline(
     cell_name_func=cell_name_func
     )
 
-
 # To load all outputs for further analysis.
 banq <- load_banquet("pbmc8k_banquet")
 ```
 
-Now the _pbmc8k_banquet_ directory has been set up - with APA information ready for downstream analysis. We recommending using our [weitrix](http://www.bioconductor.org/packages/release/bioc/html/weitrix.html) package. The methods demonstrated in the APA vignette of the weitrix package can be used: after a calibration step `weitrix_confects()` can be used to find genes with differential APA and `weitrix_sd_confects()` can be used to find genes with excess APA in an exploratory manner.
+Now the `pbmc8k_banquet` directory has been set up with APA information ready for downstream analysis. We recommend using our [weitrix](http://www.bioconductor.org/packages/release/bioc/html/weitrix.html) package. The methods demonstrated in the APA vignette of the weitrix package can be used: after a calibration step `weitrix_confects()` can be used to find genes with differential APA and `weitrix_sd_confects()` can be used to find genes with excess APA in an exploratory manner.
 
 ```{r eval=FALSE}
 library(weitrix)
@@ -204,12 +196,12 @@ interesting$table[1:8, c("confect","symbol","regions")]
 8   0.159 MALAT1                exon:exon:exon:exon:exon:exon
 ```
 
-# Details
 
+# polyApipe.py details
 
 ## Processing multiple samples
 
-If a given experiment has multiple samples in separate bam files, these can be put in a directory 
+If a given experiment has multiple samples in separate BAM files, these can be put in a directory 
 and processed together. Just proveide the directory to the -i paramter of polyApipe.py. 
 
 ```
@@ -359,15 +351,5 @@ Running:
                         
 ```                        
                         
-
-
-
-
-
-
-
-
-
-
 
 # References
