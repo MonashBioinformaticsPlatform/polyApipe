@@ -208,7 +208,7 @@ pre code {
 </ul>
 <ol start="3" style="list-style-type: decimal">
 <li><strong>Calculate APA in R. </strong> The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis.</li>
-<li><strong>APA Analysis</strong></li>
+<li><strong>APA Analysis</strong> can then be performed, we recommend using the <a href="http://www.bioconductor.org/packages/release/bioc/html/weitrix.html">weitrix</a> package.</li>
 </ol>
 <!-- Todo: put polyApipe into its own conda? -->
 </div>
@@ -283,7 +283,44 @@ polyApiper:::do_pipeline(
 
 # To load all outputs for further analysis.
 banq &lt;- load_banquet(&quot;pbmc8k_banquet&quot;)</code></pre>
-<p>Now the <em>pbmc8k_banquet</em> directory has been setup - with APA information ready for downstream analysis.</p>
+<p>Now the <em>pbmc8k_banquet</em> directory has been set up - with APA information ready for downstream analysis. We recommending using our <a href="http://www.bioconductor.org/packages/release/bioc/html/weitrix.html">weitrix</a> package. The methods demonstrated in the APA vignette of the weitrix package can be used: after a calibration step <code>weitrix_confects()</code> can be used to find genes with differential APA and <code>weitrix_sd_confects()</code> can be used to find genes with excess APA in an exploratory manner.</p>
+<pre class="r"><code>library(weitrix)
+
+# Note: If parallel processing fails, turn it off with
+BiocParallel::register( BiocParallel::SerialParam() )
+
+# Lazy-load the outputs of the pipeline
+banq &lt;- load_banquet(&quot;pbmc8k_banquet&quot;)
+
+# Shift scores summarizing the APA state in each gene x cell.
+weitrix_x(banq$shift) 
+
+# Total UMI counts, which serve as initial &quot;uncalibrated&quot; precision weights.
+weitrix_weights(banq$shift) 
+
+# We now adjust the weights, obtaining &quot;calibrated&quot; weights.
+# After this step the weights represent 1/residual variance.
+cal &lt;- weitrix_calibrate_all(
+    banq$shift, 
+    design = ~1,
+    trend_formula = ~log2(per_read_var)+well_knotted_spline(log2(weight),3))
+
+# Note: For greater sensitivity use clusters and batches in the design.
+#       eg specify design = ~cluster
+
+# A table of genes of interest is produced using:
+interesting &lt;- weitrix_sd_confects(cal)
+
+interesting$table[1:8, c(&quot;confect&quot;,&quot;symbol&quot;,&quot;regions&quot;)]</code></pre>
+<pre><code>  confect symbol                                      regions
+1   0.183   IL7R    intron:intron:intron:intron:3'UTR1:3'UTR1
+2   0.171  PARP1   3'UTR1:intron:CDS:CDS:3'UTR2:3'UTR2:3'UTR2
+3   0.169   CD69           intron:intron:intron:intron:3'UTR1
+4   0.168  SP110 CDS:CDS:CDS:CDS:CDS:CDS:3'UTR1:intron:intron
+5   0.166  IFI16      intron:CDS:CDS:CDS:intron:intron:3'UTR1
+6   0.165  H2AC6                  3'UTR1:intron:3'UTR1:3'UTR1
+7   0.163  CALM3                         3'UTR1:3'UTR2:3'UTR2
+8   0.159 MALAT1                exon:exon:exon:exon:exon:exon</code></pre>
 </div>
 </div>
 <div id="details" class="section level1">

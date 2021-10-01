@@ -42,7 +42,7 @@ data for loading into R as follows;
    cells per feature using the uncorrected UMI tags (and corrected cell barcodes).
    There will be one file per sample / input bam, saved as *_counts.tab.gz.
 3. **Calculate APA in R. ** The polyApiper R package will prepare a 'banquet' of results for alternative polyA (APA) analysis.
-4. **APA Analysis** 
+4. **APA Analysis** can then be performed, we recommend using the [weitrix](http://www.bioconductor.org/packages/release/bioc/html/weitrix.html) package.
 
 
 <!-- Todo: put polyApipe into its own conda? -->
@@ -159,10 +159,50 @@ polyApiper:::do_pipeline(
 banq <- load_banquet("pbmc8k_banquet")
 ```
 
-Now the _pbmc8k_banquet_ directory has been setup - with APA information ready for 
-downstream analysis. 
+Now the _pbmc8k_banquet_ directory has been set up - with APA information ready for downstream analysis. We recommending using our [weitrix](http://www.bioconductor.org/packages/release/bioc/html/weitrix.html) package. The methods demonstrated in the APA vignette of the weitrix package can be used: after a calibration step `weitrix_confects()` can be used to find genes with differential APA and `weitrix_sd_confects()` can be used to find genes with excess APA in an exploratory manner.
 
+```{r eval=FALSE}
+library(weitrix)
 
+# Note: If parallel processing fails, turn it off with
+BiocParallel::register( BiocParallel::SerialParam() )
+
+# Lazy-load the outputs of the pipeline
+banq <- load_banquet("pbmc8k_banquet")
+
+# Shift scores summarizing the APA state in each gene x cell.
+weitrix_x(banq$shift) 
+
+# Total UMI counts, which serve as initial "uncalibrated" precision weights.
+weitrix_weights(banq$shift) 
+
+# We now adjust the weights, obtaining "calibrated" weights.
+# After this step the weights represent 1/residual variance.
+cal <- weitrix_calibrate_all(
+    banq$shift, 
+    design = ~1,
+    trend_formula = ~log2(per_read_var)+well_knotted_spline(log2(weight),3))
+
+# Note: For greater sensitivity use clusters and batches in the design.
+#       eg specify design = ~cluster
+
+# A table of genes of interest is produced using:
+interesting <- weitrix_sd_confects(cal)
+
+interesting$table[1:8, c("confect","symbol","regions")]
+```
+
+```
+  confect symbol                                      regions
+1   0.183   IL7R    intron:intron:intron:intron:3'UTR1:3'UTR1
+2   0.171  PARP1   3'UTR1:intron:CDS:CDS:3'UTR2:3'UTR2:3'UTR2
+3   0.169   CD69           intron:intron:intron:intron:3'UTR1
+4   0.168  SP110 CDS:CDS:CDS:CDS:CDS:CDS:3'UTR1:intron:intron
+5   0.166  IFI16      intron:CDS:CDS:CDS:intron:intron:3'UTR1
+6   0.165  H2AC6                  3'UTR1:intron:3'UTR1:3'UTR1
+7   0.163  CALM3                         3'UTR1:3'UTR2:3'UTR2
+8   0.159 MALAT1                exon:exon:exon:exon:exon:exon
+```
 
 # Details
 
