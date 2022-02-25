@@ -238,10 +238,13 @@ do_peaks_weitrices <- function(
     keep <- rep(TRUE, nrow(peaks_se))    
     if (remove_mispriming)
         keep <- keep & !rowData(peaks_se)$misprime
-    if (utr_or_extension_only)
+    if (utr_or_extension_only) {
         keep <- keep & (
             rowData(peaks_se)$region == "3'UTR" |
             rowData(peaks_se)$region == "extension")
+
+        keep[is.na(keep)] <- FALSE
+    }
 
     peaks_se_relevant <- peaks_se[keep,]
 
