@@ -214,12 +214,15 @@ get_regions <- function(db, hard_extension=20, extension=2000, unstranded_gaps=T
 
 #' Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub
 #'
+#' Apologies, you will need to guess the most recent version of your organism on AnnotationHub. The version for the DNA sequence (eg version_dna=100) may be earlier than the version for the annotations (eg version=109).
+#'
 #' @export
 do_ensembl_organism <- function(
        out_path, species, version, 
-       hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c()) {
+       hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c(),
+       version_dna=version) {
     db_ahid <- get_ensdb(species, version)
-    dna_ahid <- get_dna(species, version)
+    dna_ahid <- get_dna(species, version_dna)
     orgdb_ahid <- get_orgdb(species)
 
     ensure_dir(out_path)

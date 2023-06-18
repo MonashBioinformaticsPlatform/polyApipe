@@ -11,9 +11,10 @@ do_ensembl_organism(
   hard_extension = 20,
   extension = 2000,
   unstranded_gaps = TRUE,
-  omit_biotypes = c()
+  omit_biotypes = c(),
+  version_dna = version
 )
 }
 \description{
-Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub
+Apologies, you will need to guess the most recent version of your organism on AnnotationHub. The version for the DNA sequence (eg version_dna=100) may be earlier than the version for the annotations (eg version=109).
 }
