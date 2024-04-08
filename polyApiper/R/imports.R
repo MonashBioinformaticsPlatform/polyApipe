@@ -50,7 +50,8 @@
 #'     uniquifyFeatureNames
 #'
 #' @importFrom BiocGenerics
-#'     rowSums colSums rowMeans colMeans rbind cbind
+#'     rbind cbind
+## No longer provided by BiocGenerics: rowSums colSums rowMeans colMeans
 #'
 #' @importFrom plyranges
 #'     filter select mutate group_by ungroup arrange summarize

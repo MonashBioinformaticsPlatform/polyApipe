@@ -1,4 +1,8 @@
 
+# 2024-04-09
+
+* No longer import from BiocGenerics (not needed any more?): rowSums colSums rowMeans colMeans
+
 # 2021-06-26
 
 * Add option do_logNormCounts, and try to not error-out on completely empty cells.
