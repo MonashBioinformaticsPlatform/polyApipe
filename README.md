@@ -2,7 +2,7 @@
 
 ## Current status (2024)
 
-*The Python script portion of this project should give you a set of poly(A) sites and associated read counts. The R portion of the project is less well developed, and not currently under active development. You may wish to use the outputs from the Python script and then proceed with your own analysis from that point.*
+*The Python script portion of this project should give you a set of poly(A) sites in the genome and associated UMI counts. The R portion of the project is less well developed, and not currently under active development. You may wish to use the outputs from the Python script and then proceed with your own analysis from that point.*
 
 ## Introduction
 
