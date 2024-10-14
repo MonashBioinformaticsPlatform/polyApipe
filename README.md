@@ -1,6 +1,10 @@
 # polyApipe
 
-**Please note: polyApipe is not under active development at the moment.**
+## Current status (2024)
+
+*The Python script portion of this project should give you a set of poly(A) sites and associated read counts. The R portion of the project is less well developed, and not currently under active development. You may wish to use the outputs from the Python script and then proceed with your own analysis from that point.*
+
+## Introduction
 
 polyApipe is a pipeline for examining Alternative PolyAdenylation (APA) from 10X Genomics single-cell RNA Sequencing. It consists of a Python 3 part, `polyApipe.py` which performs peak calling and UMI counting, and and R part, `polyApiper`, which analyses the resultant UMI counts.
 
