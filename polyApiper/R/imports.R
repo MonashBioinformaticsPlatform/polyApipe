@@ -33,6 +33,8 @@
 #' @importFrom DelayedArray
 #'     getRealizationBackend setRealizationBackend rowsum realize
 #'     sweep
+#'     rowSums colSums rowMeans colMeans
+### Seem to need to import rowSums, colSums, rowMeans, colMeans even though DelayedArray is monkeypatching base so that they are generics or something.
 #'
 #' @importFrom SingleCellExperiment 
 #'     SingleCellExperiment counts logcounts sizeFactors sizeFactors<- reducedDim

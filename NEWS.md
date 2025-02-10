@@ -1,4 +1,8 @@
 
+# 2025-02-10
+
+* Import directly from DelayedArray, as this seems to be necessary: rowSums colSums rowMeans colMeans
+
 # 2024-04-09
 
 * No longer import from BiocGenerics (not needed any more?): rowSums colSums rowMeans colMeans
