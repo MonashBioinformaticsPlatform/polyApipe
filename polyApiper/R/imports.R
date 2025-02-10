@@ -33,6 +33,8 @@
 #' @importFrom DelayedArray
 #'     getRealizationBackend setRealizationBackend rowsum realize
 #'     sweep
+#'     rowSums colSums rowMeans colMeans 
+### DelayedArray seems to monkeypatch rowSums,colSums,rowMeans,colMeans into base, but polyApiper still wasn't loading them properly  
 #'
 #' @importFrom SingleCellExperiment 
 #'     SingleCellExperiment counts logcounts sizeFactors sizeFactors<- reducedDim
@@ -50,7 +52,8 @@
 #'     uniquifyFeatureNames
 #'
 #' @importFrom BiocGenerics
-#'     rowSums colSums rowMeans colMeans rbind cbind
+#'     rbind cbind
+###    rowSums colSums rowMeans colMeans   -- no longer exported from BiocGenerics in Bioconductor 3.18
 #'
 #' @importFrom plyranges
 #'     filter select mutate group_by ungroup arrange summarize

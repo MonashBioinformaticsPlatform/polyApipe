@@ -38,28 +38,28 @@ get_ensdb <- function(species=NULL, version=NULL) {
     names(ah)
 }
 
-#' Get AnnotationHub ID for an ENSEMBL genome sequence
-#'
-#' @export
-get_dna <- function(species, version) {
-    ah <- AnnotationHub()
-    ah <- ah[ ah$rdataclass == "TwoBitFile" ]
-    ah <- ah[ ah$species == species ]
-    pattern <- paste0(
-        "^ftp://ftp\\.ensembl\\.org/pub/release-",version,
-        "/.*\\.dna_sm\\..*\\.fa\\.gz$")
-    ah <- ah[ grepl(pattern, ah$sourceurl) ]
-
-    if (length(ah) == 0)
-        stop("Not found")
-
-    if (length(ah) > 1) {
-        print(ah)
-        stop("Multiple records available")
-    }
-
-    names(ah)
-}
+##' Get AnnotationHub ID for an ENSEMBL genome sequence
+##'
+##' @export
+#get_dna <- function(species, version) {
+#    ah <- AnnotationHub()
+#    ah <- ah[ ah$rdataclass == "TwoBitFile" ]
+#    ah <- ah[ ah$species == species ]
+#    pattern <- paste0(
+#        "^ftp://ftp\\.ensembl\\.org/pub/release-",version,
+#        "/.*\\.dna_sm\\..*\\.fa\\.gz$")
+#    ah <- ah[ grepl(pattern, ah$sourceurl) ]
+#
+#    if (length(ah) == 0)
+#        stop("Not found")
+#
+#    if (length(ah) > 1) {
+#        print(ah)
+#        stop("Multiple records available")
+#    }
+#
+#    names(ah)
+#}
 
 get_orgdb <- function(species) {
     ah <- AnnotationHub()
@@ -214,20 +214,19 @@ get_regions <- function(db, hard_extension=20, extension=2000, unstranded_gaps=T
 
 #' Create a polyApiper organism directory based on ENSEMBL annotation in AnnotationHub
 #'
-#' Apologies, you will need to guess the most recent version of your organism on AnnotationHub. The version for the DNA sequence (eg version_dna=100) may be earlier than the version for the annotations (eg version=109).
-#'
 #' @export
 do_ensembl_organism <- function(
        out_path, species, version, 
-       hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c(),
-       version_dna=version) {
+       hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c()
+       ) {
     db_ahid <- get_ensdb(species, version)
-    dna_ahid <- get_dna(species, version_dna)
     orgdb_ahid <- get_orgdb(species)
 
     ensure_dir(out_path)
     config <- list(
-        AnnotationHub=list(txdb=db_ahid, dna=dna_ahid, orgdb=orgdb_ahid))
+        AnnotationHub=list(
+            txdb=db_ahid, 
+            orgdb=orgdb_ahid))
     write_json(config, file.path(out_path, "config.json"), auto_unbox=TRUE)
 
     result <- get_regions(get_ah(db_ahid),
@@ -238,3 +237,23 @@ do_ensembl_organism <- function(
 
     invisible()
 }
+
+
+
+##' @export
+#do_organism <- function(out_path, txdb,
+#        hard_extension=20, extension=2000, unstranded_gaps=TRUE, omit_biotypes=c()) {
+#    ensure_dir(out_path)
+#    
+#    saveRDS(txdb, file.path(out_path,"txdb.rds"))
+#    
+#    result <- get_regions(txdb,
+#        hard_extension=hard_extension, extension=extension, 
+#        unstranded_gaps=unstranded_gaps, omit_biotypes=omit_biotypes)
+#    
+#    write_gff3(result$regions, file.path(out_path,"regions.gff3"), index=TRUE)
+#    write_gff3(result$bad, file.path(out_path,"bad.gff3"), index=TRUE)
+#    
+#    invisible()
+#}
+

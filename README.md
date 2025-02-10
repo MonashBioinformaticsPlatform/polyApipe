@@ -70,6 +70,14 @@ polyApipe/polyApipe.py -i demo/SRR5259422_demo.bam -o SRR5259422_demo
 
 Process the output of `polyApipe.py` in R.
 
+Note that your CellRanger reference may have used chromosome names starting with "chr". polyApiper uses ENSEMBL style naming, which does not have this. A crude way to fix this is with sed:
+
+```
+sed 's/^chr//' demo_polyA_peaks.gff >demo_polyA_peaks_renamed.gff
+```
+
+Processing in R would then look like:
+
 ```
 library(polyApiper)
 
@@ -99,7 +107,7 @@ cell_name_func <- function(batch,barcode) paste0(batch,"_",barcode)
 do_pipeline(
     out_path="demo_banquet", 
     counts_file_dir="demo_counts", 
-    peak_info_file="demo_polyA_peaks.gff", 
+    peak_info_file="demo_polyA_peaks.gff",  # or "demo_polyA_peaks_renamed.gff" if necessary
     organism="mouse_ens100",
     cells_to_use=cells_to_use,
     cell_name_func=cell_name_func)
@@ -122,6 +130,8 @@ ah <- AnnotationHub()
 subset(ah, rdataclass == "EnsDb" & species == "Homo sapiens")$title
 subset(ah, rdataclass == "EnsDb" & species == "Mus musculus")$title
 ```
+
+Note the genome version must be compatible with the genome used with CellRanger. The most pertinent example being that if CellRanger was used with GRCm38 (mm10) for Mus musculus, use Ensembl version 102.
 
 
 ### Lower level processing in R

@@ -32,7 +32,6 @@ Imports:
     S4Vectors,
     HDF5Array,
     BiocGenerics,
-    DelayedArray,
     BiocParallel,
     Matrix,
     AnnotationHub,
@@ -43,7 +42,7 @@ Imports:
     plyranges,
     ensembldb,
     SummarizedExperiment,
-    SingleCellExperiment,
+    DelayedArray,
     scran,
     scater,
     scuttle,
@@ -57,4 +56,4 @@ Imports:
     shiny,
     DT,
     rmarkdown
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2

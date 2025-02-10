@@ -1,4 +1,8 @@
 
+# 2025-02-10
+
+* Import rowSums,colSums,rowMeans,colMeans from DelayedArray. (DelayedArray seems to turn the base implementation of these into generics, but polyApiper wasn't loading the generics properly.)
+
 # 2021-06-26
 
 * Add option do_logNormCounts, and try to not error-out on completely empty cells.

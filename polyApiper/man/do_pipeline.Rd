@@ -18,7 +18,7 @@ do_pipeline(
   peak_min_present = 50,
   peak_min_prop = 0.01,
   do_logNormCounts = TRUE,
-  do_computeSumFactors = TRUE,
+  do_computeSumFactors = FALSE,
   title = "polyApiper pipeline run",
   stages = seq_along(PIPELINE_STAGES)
 )

@@ -67,10 +67,10 @@ do_pipeline <- function(
         
         peak_info_file,
         organism,
-
+        
         cell_name_func=function(batch, cell) paste0(batch, cell),
         cells_to_use=NULL,
-
+        
         # peaks_weitrices options
         remove_mispriming=TRUE, 
         utr_or_extension_only=FALSE,
@@ -78,18 +78,18 @@ do_pipeline <- function(
         peak_min_prop=0.01,
         # log expression level options
         do_logNormCounts=TRUE,
-        do_computeSumFactors=TRUE, 
-                
+        do_computeSumFactors=FALSE, 
+        
         title="polyApiper pipeline run",
-                
+        
         stages=seq_along(PIPELINE_STAGES)) {
-
+    
     if (is.numeric(stages)) 
         stages <- PIPELINE_STAGES[stages]
     assert_that(all(stages %in% PIPELINE_STAGES))
-
+    
     ensure_dir(out_path)
-
+    
     # Record invocation
     env <- environment() 
     cat("do_pipeline(\n",
@@ -99,10 +99,10 @@ do_pipeline <- function(
             paste(collapse=",\n"),
         ")\n",
         sep="",file=file.path(out_path,"invocation.txt"))
-
-
+    
+    
     peak_counts <- file.path(out_path, "raw_peak_counts")
-
+    
     if ("load" %in% stages) {
         message("-- 1/4 load --")
     
